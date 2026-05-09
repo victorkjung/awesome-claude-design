@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#FF90E8" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="MJ Cheat" />
+<title>Midjourney Cheat Sheet — Prompt Engineering</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FF90E8'/%3E%3Ctext x='50%25' y='54%25' text-anchor='middle' font-family='system-ui' font-weight='900' font-size='34' fill='%23000'%3EMJ%3C/text%3E%3C/svg%3E" />
+<style>
+  :root{
+    --pink:#FF90E8;
+    --yellow:#FFC900;
+    --mint:#23A094;
+    --lilac:#90A8FF;
+    --peach:#FF8E5E;
+    --lime:#D6FB7C;
+    --cream:#F4F4F0;
+    --ink:#000;
+    --paper:#fff;
+    --shadow: 6px 6px 0 var(--ink);
+    --shadow-sm: 4px 4px 0 var(--ink);
+    --radius: 4px;
+    --border: 3px solid var(--ink);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--pink);
+    color:var(--ink);
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, "Mabry Pro", "ABC Diatype", sans-serif;
+    font-size:16px;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+    padding: 18px 16px 96px;
+  }
+  header.hero{
+    background:var(--paper);
+    border:var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px 18px 18px;
+    margin-bottom: 18px;
+    transform: rotate(-0.4deg);
+  }
+  .eyebrow{
+    display:inline-block;
+    background:var(--ink);
+    color:var(--paper);
+    font-weight:800;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    padding:5px 9px;
+    border-radius:999px;
+  }
+  h1{
+    font-size: clamp(28px, 7vw, 44px);
+    line-height:1.02;
+    letter-spacing:-0.02em;
+    margin: 10px 0 6px;
+    font-weight:900;
+  }
+  h1 em{
+    font-style:normal;
+    background: var(--yellow);
+    box-shadow: 0 -.1em 0 var(--yellow), 0 .12em 0 var(--ink);
+    padding: 0 6px;
+  }
+  .sub{font-size:15px; margin:6px 0 0; opacity:.8}
+  .meta{
+    display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;
+  }
+  .chip{
+    background:var(--lime);
+    border:var(--border);
+    border-radius:999px;
+    padding:5px 10px;
+    font-weight:700;
+    font-size:12px;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  .chip.alt{background:var(--lilac)}
+  .chip.alt2{background:var(--peach)}
+  .controls{
+    position:sticky; top:0; z-index:10;
+    margin: 0 -16px 16px;
+    padding: 10px 16px;
+    background: var(--pink);
+    border-bottom: var(--border);
+  }
+  .search{
+    width:100%;
+    font: inherit;
+    font-weight:600;
+    padding: 13px 14px;
+    border: var(--border);
+    border-radius: var(--radius);
+    background: var(--paper);
+    box-shadow: var(--shadow-sm);
+    outline:none;
+  }
+  .search:focus{ background: var(--lime); }
+  .tabs{
+    display:flex; gap:8px; overflow-x:auto;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 10px;
+    padding-bottom: 4px;
+    scrollbar-width:none;
+  }
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{
+    flex:0 0 auto;
+    background:var(--paper);
+    border: var(--border);
+    box-shadow: 2px 2px 0 var(--ink);
+    border-radius: 999px;
+    padding: 7px 13px;
+    font-weight:800;
+    font-size: 13px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .tab.active{ background: var(--ink); color: var(--paper); }
+  section.card{
+    background: var(--paper);
+    border: var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px 16px 8px;
+    margin-bottom: 18px;
+  }
+  section.card.pink{ background: #FFD9F5 }
+  section.card.yellow{ background: #FFF1A8 }
+  section.card.mint{ background: #B8F1E8 }
+  section.card.lilac{ background: #D6DEFF }
+  section.card.peach{ background: #FFD3BD }
+  section.card.lime{ background: #ECFFC1 }
+  section h2{
+    font-size: 22px;
+    letter-spacing:-0.01em;
+    margin: 4px 0 12px;
+    display:flex; align-items:center; gap:10px;
+    font-weight:900;
+  }
+  section h2 .badge{
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:30px; height:30px; padding: 0 8px;
+    background: var(--ink); color: var(--paper);
+    border-radius: 8px; font-size: 14px; font-weight:900;
+  }
+  section h3{
+    margin: 12px 0 6px;
+    font-size: 15px;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+  }
+  p{margin:6px 0 10px}
+  ul{margin:6px 0 12px; padding-left: 18px}
+  li{margin:3px 0}
+  code, kbd, .mono{
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13.5px;
+  }
+  code{
+    background: var(--ink); color: var(--paper);
+    padding: 1px 6px;
+    border-radius: 4px;
+    word-break: break-word;
+  }
+  pre{
+    background: var(--ink);
+    color: var(--paper);
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    border: var(--border);
+    box-shadow: var(--shadow-sm);
+    overflow:auto;
+    margin: 10px 0 14px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  pre .c{ color: #FFC900 }   /* command */
+  pre .p{ color: #FF90E8 }   /* parameter */
+  pre .v{ color: #B8F1E8 }   /* value */
+  pre .s{ color: #D6FB7C }   /* subject */
+  table{
+    width:100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 8px 0 14px;
+    font-size: 14px;
+    background: var(--paper);
+    border: var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow:hidden;
+  }
+  th, td{
+    text-align:left;
+    padding: 9px 10px;
+    border-bottom: 2px solid var(--ink);
+    vertical-align: top;
+  }
+  tr:last-child td{border-bottom:none}
+  th{
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 12px;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+  }
+  td code{font-size:12.5px}
+  .copy{
+    float:right;
+    margin: -2px 0 0 8px;
+    background: var(--paper);
+    color: var(--ink);
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-weight:800;
+    font-size: 11px;
+    cursor:pointer;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  .copy:active{ transform: translate(2px,2px); box-shadow: none; }
+  .grid{ display:grid; grid-template-columns: 1fr; gap: 10px; }
+  @media (min-width: 560px){ .grid.two{ grid-template-columns: 1fr 1fr } }
+  .kbd{
+    display:inline-block;
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    border-bottom-width: 3px;
+    border-radius: 6px;
+    padding: 1px 7px;
+    font-weight:800;
+    font-size: 12px;
+    margin: 0 2px;
+  }
+  .pill-row{display:flex; flex-wrap:wrap; gap:6px}
+  .pill{
+    background:var(--paper);
+    border: 2px solid var(--ink);
+    border-radius:999px;
+    padding: 4px 10px;
+    font-size: 13px;
+    font-weight:700;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  .callout{
+    background: var(--yellow);
+    border: var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin: 10px 0;
+    box-shadow: var(--shadow-sm);
+    font-weight:600;
+  }
+  .callout strong{ font-weight:900; }
+  footer{
+    text-align:center;
+    margin-top: 24px;
+    font-size: 12px;
+    opacity:.75;
+    line-height:1.6;
+  }
+  .totop{
+    position: fixed;
+    right: 14px;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-weight:900;
+    border: var(--border);
+    box-shadow: var(--shadow-sm);
+    cursor:pointer;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .15s, transform .15s;
+    z-index: 20;
+  }
+  .totop.show{ opacity:1; transform: translateY(0) }
+  .hidden{ display:none !important }
+
+  @media (prefers-color-scheme: dark){
+    body{ background:#1B1B1B }
+    .controls{ background: #1B1B1B }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="eyebrow">Pocket reference · v7</span>
+    <h1>The <em>Midjourney</em> Cheat Sheet.</h1>
+    <p class="sub">Every parameter, every weight, every shortcut — in one scroll.</p>
+    <div class="meta">
+      <span class="chip">/imagine</span>
+      <span class="chip alt">--sref · --cref · --p</span>
+      <span class="chip alt2">multi-prompts</span>
+    </div>
+  </header>
+
+  <div class="controls">
+    <input id="q" class="search" type="search" inputmode="search" autocomplete="off" autocapitalize="off" placeholder="Search params, e.g. --ar, sref, weird…" aria-label="Search the cheat sheet" />
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-target="all">All</div>
+      <div class="tab" data-target="sec-anatomy">Anatomy</div>
+      <div class="tab" data-target="sec-params">Parameters</div>
+      <div class="tab" data-target="sec-refs">Refs (sref/cref)</div>
+      <div class="tab" data-target="sec-multi">Multi-prompts</div>
+      <div class="tab" data-target="sec-perm">Permutations</div>
+      <div class="tab" data-target="sec-cmd">Commands</div>
+      <div class="tab" data-target="sec-style">Style menu</div>
+      <div class="tab" data-target="sec-camera">Camera</div>
+      <div class="tab" data-target="sec-edit">Editor</div>
+      <div class="tab" data-target="sec-tips">Tips</div>
+    </div>
+  </div>
+
+  <section id="sec-anatomy" class="card pink">
+    <h2><span class="badge">1</span>Prompt Anatomy</h2>
+    <p>A great prompt has four moves. Order matters — words near the front pull harder.</p>
+    <pre><span class="s">[image URL]</span> <span class="s">subject + action</span>, <span class="s">style</span>, <span class="s">composition + lighting</span>, <span class="s">mood</span> <span class="p">--ar</span> <span class="v">3:2</span> <span class="p">--s</span> <span class="v">250</span> <span class="p">--v</span> <span class="v">7</span></pre>
+    <h3>Worked example</h3>
+    <pre><button class="copy" data-copy="a tired astronaut sipping espresso, neo-noir oil painting, cinematic close-up, volumetric rim light, melancholy --ar 3:2 --s 350 --v 7">copy</button><span class="s">a tired astronaut sipping espresso</span>, <span class="s">neo-noir oil painting</span>, <span class="s">cinematic close-up, volumetric rim light</span>, <span class="s">melancholy</span> <span class="p">--ar</span> <span class="v">3:2</span> <span class="p">--s</span> <span class="v">350</span> <span class="p">--v</span> <span class="v">7</span></pre>
+    <ul>
+      <li><b>Subject</b> — who/what + what they're doing.</li>
+      <li><b>Style</b> — medium / artist movement / era.</li>
+      <li><b>Composition + light</b> — angle, lens, lighting.</li>
+      <li><b>Mood</b> — one or two emotional words.</li>
+    </ul>
+  </section>
+
+  <section id="sec-params" class="card yellow">
+    <h2><span class="badge">2</span>Core Parameters</h2>
+    <p>Append after your prompt. Long form and short form both work.</p>
+    <table>
+      <thead><tr><th>Flag</th><th>What it does</th><th>Range / default</th></tr></thead>
+      <tbody>
+        <tr><td><code>--ar W:H</code></td><td>Aspect ratio. Common: 1:1, 4:5, 2:3, 3:2, 16:9, 9:16, 21:9.</td><td>Default <code>1:1</code></td></tr>
+        <tr><td><code>--v 7</code></td><td>Model version. Try <code>7</code>, <code>6.1</code>, <code>6</code>, <code>5.2</code>.</td><td>Default current</td></tr>
+        <tr><td><code>--niji 6</code></td><td>Anime / manga model. Pairs with <code>--style cute / scenic / expressive / original</code>.</td><td>—</td></tr>
+        <tr><td><code>--s</code> stylize</td><td>How aggressively MJ pushes its aesthetic over your literal text.</td><td>0–1000 · default 100</td></tr>
+        <tr><td><code>--c</code> chaos</td><td>How varied the 4 grid images are from each other.</td><td>0–100 · default 0</td></tr>
+        <tr><td><code>--w</code> weird</td><td>Unusual, off-beat aesthetics. Stack with low <code>--s</code> for raw weirdness.</td><td>0–3000 · default 0</td></tr>
+        <tr><td><code>--q</code> quality</td><td>GPU time per render. Lower = faster + sketchier.</td><td>.25 · .5 · 1 · 2</td></tr>
+        <tr><td><code>--seed N</code></td><td>Reproducibility. Same seed + same prompt + same model = same starting noise.</td><td>0–4294967295</td></tr>
+        <tr><td><code>--stop N</code></td><td>Stop the job early at N% — produces softer / sketchier output.</td><td>10–100</td></tr>
+        <tr><td><code>--tile</code></td><td>Seamlessly tileable patterns / textures.</td><td>flag</td></tr>
+        <tr><td><code>--no thing</code></td><td>Soft negative prompt. Discourages a concept (don't write "no X" in the prompt).</td><td>text</td></tr>
+        <tr><td><code>--raw</code></td><td>Less opinionated styling — closer to literal text.</td><td>flag</td></tr>
+        <tr><td><code>--repeat N</code></td><td>Run the same job N times (Pro/Mega plans).</td><td>2–40</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><strong>Rule of thumb.</strong> Low <code>--s</code> (≤100) = literal. High <code>--s</code> (300+) = stylish but loose. Pair <code>--w</code> with low <code>--s</code> for the weirdest results.</div>
+  </section>
+
+  <section id="sec-refs" class="card mint">
+    <h2><span class="badge">3</span>Image, Style &amp; Character Refs</h2>
+    <h3>Image prompt</h3>
+    <p>Paste one or more image URLs <em>before</em> your text. They influence subject + composition.</p>
+    <pre><button class="copy" data-copy="https://example.com/dog.png a knight in shining armor --iw 1.5 --ar 3:2 --v 7">copy</button><span class="v">https://…/dog.png</span> <span class="s">a knight in shining armor</span> <span class="p">--iw</span> <span class="v">1.5</span> <span class="p">--ar</span> <span class="v">3:2</span> <span class="p">--v</span> <span class="v">7</span></pre>
+    <table>
+      <thead><tr><th>Flag</th><th>What it does</th><th>Range</th></tr></thead>
+      <tbody>
+        <tr><td><code>--iw</code></td><td>Image weight — how much the image prompt counts vs. the text.</td><td>0–3 · default 1</td></tr>
+        <tr><td><code>--sref URL</code></td><td>Style reference — copy the <em>vibe</em>, not the subject. Stack multiple URLs space-separated.</td><td>—</td></tr>
+        <tr><td><code>--sw N</code></td><td>Style-ref strength.</td><td>0–1000 · default 100</td></tr>
+        <tr><td><code>--sref random</code></td><td>Roll a random style. <code>--sref random-32</code> = 32-style mix. Save the printed code to reuse.</td><td>—</td></tr>
+        <tr><td><code>--cref URL</code></td><td>Character reference — keep the same face / character across renders.</td><td>—</td></tr>
+        <tr><td><code>--cw N</code></td><td>Character weight: <b>0</b> = face only, <b>100</b> = face + hair + clothes.</td><td>0–100 · default 100</td></tr>
+        <tr><td><code>--p</code></td><td>Personalization — bake in your taste profile (turn on in <code>/settings</code>).</td><td>flag</td></tr>
+        <tr><td><code>--p code</code></td><td>Use <em>someone else's</em> personalization code — paste it after <code>--p</code>.</td><td>—</td></tr>
+        <tr><td><code>--oref URL --ow N</code></td><td>Omni-reference (V7): one ref to influence subject + style at once.</td><td>0–1000</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><strong>Stack &amp; weigh.</strong> <code>--sref a.jpg b.jpg::2</code> doubles the second style. Combine <code>--sref</code> + <code>--cref</code> + <code>--p</code> for a fully on-brand character.</div>
+  </section>
+
+  <section id="sec-multi" class="card lilac">
+    <h2><span class="badge">4</span>Multi-prompts &amp; Weights</h2>
+    <p>Split a prompt into chunks with <code>::</code>. Add a number to weight a chunk. Negative numbers act like <code>--no</code>.</p>
+    <pre><button class="copy" data-copy="space:: ship --v 7">copy</button><span class="s">space</span><span class="p">::</span> <span class="s">ship</span> <span class="p">--v</span> <span class="v">7</span>     <span class="v"># two ideas, equal weight</span>
+<span class="s">hot::2 dog</span>             <span class="v"># prioritize "hot" (a temperature)</span>
+<span class="s">cyberpunk city ::1 rain::-.5</span>  <span class="v"># discourage rain</span></pre>
+    <ul>
+      <li>Bare <code>::</code> = weight 1 by default.</li>
+      <li>Decimals work: <code>::.5</code> halves the influence.</li>
+      <li>Negative weights total must stay net-positive.</li>
+    </ul>
+  </section>
+
+  <section id="sec-perm" class="card peach">
+    <h2><span class="badge">5</span>Permutations</h2>
+    <p>Run multiple jobs at once with <code>{a, b, c}</code> — MJ expands every combination.</p>
+    <pre><button class="copy" data-copy="a {red, teal, golden} {fox, owl} in a forest --ar 3:2 --v 7">copy</button><span class="s">a {red, teal, golden} {fox, owl} in a forest</span> <span class="p">--ar</span> <span class="v">3:2</span> <span class="p">--v</span> <span class="v">7</span>
+<span class="v"># → 6 separate jobs (3 colors × 2 animals)</span></pre>
+    <ul>
+      <li>Escape commas inside braces with <code>\,</code> if you need a literal one.</li>
+      <li>Use <code>/fast</code> mode — permutations burn GPU minutes fast.</li>
+      <li>Confirms before launching when count &gt; 3.</li>
+    </ul>
+  </section>
+
+  <section id="sec-cmd" class="card lime">
+    <h2><span class="badge">6</span>Commands</h2>
+    <table>
+      <thead><tr><th>Command</th><th>Use</th></tr></thead>
+      <tbody>
+        <tr><td><code>/imagine</code></td><td>Generate a 4-image grid from a prompt.</td></tr>
+        <tr><td><code>/blend</code></td><td>Merge 2–5 images, no text. Great on mobile.</td></tr>
+        <tr><td><code>/describe</code></td><td>Reverse-prompt: image → 4 prompt suggestions.</td></tr>
+        <tr><td><code>/shorten</code></td><td>Trim filler words, see what's actually doing work.</td></tr>
+        <tr><td><code>/tune</code></td><td>Generate a Style Tuner — pick visual directions, get an <code>--style</code> code.</td></tr>
+        <tr><td><code>/settings</code></td><td>Default <code>--v</code>, <code>--s</code>, fast/relax, remix, sticky style, <code>--p</code>.</td></tr>
+        <tr><td><code>/prefer suffix</code></td><td>Auto-append flags (e.g. <code>--ar 3:2 --v 7</code>) to every prompt.</td></tr>
+        <tr><td><code>/info</code></td><td>Subscription, GPU minutes used, queue.</td></tr>
+        <tr><td><code>/fast · /relax · /turbo</code></td><td>Switch GPU modes. Turbo ≈ 4× cost, 4× speed.</td></tr>
+        <tr><td><code>/show ID</code></td><td>Re-show a job in this channel from its job ID.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="sec-style" class="card pink">
+    <h2><span class="badge">7</span>Style &amp; Lighting Menu</h2>
+    <h3>Mediums</h3>
+    <div class="pill-row">
+      <span class="pill">oil painting</span><span class="pill">watercolor</span><span class="pill">gouache</span>
+      <span class="pill">charcoal sketch</span><span class="pill">linocut</span><span class="pill">risograph</span>
+      <span class="pill">pixel art</span><span class="pill">isometric 3D</span><span class="pill">low poly</span>
+      <span class="pill">claymation</span><span class="pill">stop-motion</span><span class="pill">papercraft</span>
+      <span class="pill">vector flat</span><span class="pill">photoreal</span><span class="pill">ink + wash</span>
+    </div>
+    <h3>Eras / movements</h3>
+    <div class="pill-row">
+      <span class="pill">art nouveau</span><span class="pill">art deco</span><span class="pill">bauhaus</span>
+      <span class="pill">ukiyo-e</span><span class="pill">brutalist</span><span class="pill">vaporwave</span>
+      <span class="pill">solarpunk</span><span class="pill">cyberpunk</span><span class="pill">cottagecore</span>
+      <span class="pill">y2k</span><span class="pill">memphis design</span><span class="pill">retro-futurism</span>
+    </div>
+    <h3>Lighting</h3>
+    <div class="pill-row">
+      <span class="pill">golden hour</span><span class="pill">blue hour</span><span class="pill">overcast</span>
+      <span class="pill">cinematic lighting</span><span class="pill">volumetric light</span><span class="pill">rim light</span>
+      <span class="pill">backlit silhouette</span><span class="pill">studio softbox</span><span class="pill">neon glow</span>
+      <span class="pill">candle light</span><span class="pill">moonlit</span><span class="pill">harsh noon sun</span>
+    </div>
+    <h3>Mood</h3>
+    <div class="pill-row">
+      <span class="pill">dreamy</span><span class="pill">melancholic</span><span class="pill">whimsical</span>
+      <span class="pill">eerie</span><span class="pill">serene</span><span class="pill">epic</span>
+      <span class="pill">cozy</span><span class="pill">claustrophobic</span><span class="pill">hopeful</span>
+    </div>
+  </section>
+
+  <section id="sec-camera" class="card lilac">
+    <h2><span class="badge">8</span>Camera &amp; Composition</h2>
+    <h3>Shots</h3>
+    <div class="pill-row">
+      <span class="pill">extreme close-up</span><span class="pill">close-up</span><span class="pill">medium shot</span>
+      <span class="pill">full body</span><span class="pill">wide establishing</span><span class="pill">aerial drone</span>
+      <span class="pill">over-the-shoulder</span><span class="pill">POV</span><span class="pill">dutch angle</span>
+      <span class="pill">low angle hero</span><span class="pill">top-down flat lay</span>
+    </div>
+    <h3>Lenses &amp; cameras</h3>
+    <div class="pill-row">
+      <span class="pill">35mm film</span><span class="pill">85mm bokeh</span><span class="pill">macro lens</span>
+      <span class="pill">fisheye</span><span class="pill">tilt-shift</span><span class="pill">long exposure</span>
+      <span class="pill">Polaroid SX-70</span><span class="pill">Hasselblad</span><span class="pill">CCTV still</span>
+    </div>
+    <h3>Composition</h3>
+    <div class="pill-row">
+      <span class="pill">rule of thirds</span><span class="pill">centered symmetry</span><span class="pill">leading lines</span>
+      <span class="pill">negative space</span><span class="pill">shallow depth of field</span><span class="pill">deep focus</span>
+    </div>
+  </section>
+
+  <section id="sec-edit" class="card mint">
+    <h2><span class="badge">9</span>Editor &amp; Job Actions</h2>
+    <table>
+      <thead><tr><th>Action</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><b>U1–U4</b></td><td>Upscale the 1st–4th image of the grid.</td></tr>
+        <tr><td><b>V1–V4</b></td><td>New 4-grid based on a chosen image.</td></tr>
+        <tr><td><b>Vary (Subtle)</b></td><td>Tiny tweaks — keep composition.</td></tr>
+        <tr><td><b>Vary (Strong)</b></td><td>Big creative reroll, same prompt.</td></tr>
+        <tr><td><b>Vary (Region)</b></td><td>Mask + inpaint with a new prompt.</td></tr>
+        <tr><td><b>Zoom Out 1.5× / 2×</b></td><td>Outpaint to expand the canvas.</td></tr>
+        <tr><td><b>Custom Zoom</b></td><td>Change <code>--ar</code> + repaint to fit. Trick: Zoom 1× to swap aspect ratios.</td></tr>
+        <tr><td><b>Pan ↑↓←→</b></td><td>Outpaint in one direction; locks the other axis.</td></tr>
+        <tr><td><b>Remix</b></td><td>Edit prompt + params before any V/Pan/Zoom.</td></tr>
+        <tr><td><b>Upscale Subtle / Creative</b></td><td>Subtle = clean detail. Creative = invents extra detail.</td></tr>
+        <tr><td><b>Editor (web)</b></td><td>Inpaint, outpaint, erase, retexture in one canvas.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="sec-tips" class="card yellow">
+    <h2><span class="badge">10</span>Tips That Actually Work</h2>
+    <ul>
+      <li><b>Front-load the subject.</b> Words near the start get more weight than words at the end.</li>
+      <li><b>Be specific, not adjective-stacked.</b> "<i>a librarian's hands cupping a paper crane</i>" beats "<i>beautiful detailed amazing hands</i>".</li>
+      <li><b>One style per prompt.</b> "watercolor + 3D render + photoreal" usually fights itself — pick one.</li>
+      <li><b>Use <code>--no</code>, never "no X".</b> "no text" in a prompt sometimes <em>adds</em> text. Use <code>--no text, watermark, signature</code>.</li>
+      <li><b>Lock the look:</b> save a <code>--sref</code> code or <code>--p code</code> for an entire series.</li>
+      <li><b>Iterate cheap.</b> <code>--q .5</code> + <code>/fast</code> for exploration, then upscale only the keepers.</li>
+      <li><b>Reproduce a result:</b> react with ✉️ on a job to DM the seed + job ID, then re-run with <code>--seed</code>.</li>
+      <li><b>Aspect ratio changes everything.</b> Same prompt at 9:16 vs 21:9 is basically a different image.</li>
+      <li><b>Use <code>/describe</code></b> on an image you love → steal the structure of the prompt, replace the subject.</li>
+      <li><b>Stylize ladder.</b> 50 (literal) → 100 (default) → 250 (stylish) → 750 (decorative) → 1000 (chaos).</li>
+    </ul>
+  </section>
+
+  <section id="sec-cheats" class="card peach">
+    <h2><span class="badge">★</span>Pocket Recipes</h2>
+    <h3>Editorial portrait</h3>
+    <pre><button class="copy" data-copy="environmental portrait of a ceramicist in her studio, hands dusted with clay, north-facing window light, 85mm Hasselblad, shallow depth of field --ar 4:5 --s 200 --v 7">copy</button><span class="s">environmental portrait of a ceramicist in her studio, hands dusted with clay, north-facing window light, 85mm Hasselblad, shallow depth of field</span> <span class="p">--ar</span> <span class="v">4:5</span> <span class="p">--s</span> <span class="v">200</span> <span class="p">--v</span> <span class="v">7</span></pre>
+    <h3>Product on coloured set</h3>
+    <pre><button class="copy" data-copy="minimalist product shot of a matte black water bottle on a coral pink seamless paper, soft top light, hard shadow, centered, studio --ar 1:1 --s 150 --style raw --v 7">copy</button><span class="s">minimalist product shot of a matte black water bottle on a coral pink seamless paper, soft top light, hard shadow, centered, studio</span> <span class="p">--ar</span> <span class="v">1:1</span> <span class="p">--s</span> <span class="v">150</span> <span class="p">--style</span> <span class="v">raw</span> <span class="p">--v</span> <span class="v">7</span></pre>
+    <h3>Children's book illustration</h3>
+    <pre><button class="copy" data-copy="a tiny mouse mailing a letter at dawn, gouache illustration, warm muted palette, soft texture, picture book spread --ar 3:2 --niji 6 --style scenic">copy</button><span class="s">a tiny mouse mailing a letter at dawn, gouache illustration, warm muted palette, soft texture, picture book spread</span> <span class="p">--ar</span> <span class="v">3:2</span> <span class="p">--niji</span> <span class="v">6</span> <span class="p">--style</span> <span class="v">scenic</span></pre>
+    <h3>Brutalist poster</h3>
+    <pre><button class="copy" data-copy="brutalist concert poster, oversized typography, single hot pink shape on cream, grain, photocopier texture, swiss grid --ar 2:3 --s 400 --v 7">copy</button><span class="s">brutalist concert poster, oversized typography, single hot pink shape on cream, grain, photocopier texture, swiss grid</span> <span class="p">--ar</span> <span class="v">2:3</span> <span class="p">--s</span> <span class="v">400</span> <span class="p">--v</span> <span class="v">7</span></pre>
+    <h3>Cinematic establishing shot</h3>
+    <pre><button class="copy" data-copy="a lone figure on the salt flats at blue hour, anamorphic lens flare, distant thunderhead, 35mm film grain, cinematic --ar 21:9 --s 300 --v 7">copy</button><span class="s">a lone figure on the salt flats at blue hour, anamorphic lens flare, distant thunderhead, 35mm film grain, cinematic</span> <span class="p">--ar</span> <span class="v">21:9</span> <span class="p">--s</span> <span class="v">300</span> <span class="p">--v</span> <span class="v">7</span></pre>
+  </section>
+
+  <footer>
+    Unofficial reference. Midjourney is a trademark of Midjourney Inc.<br/>
+    Tap any <span class="kbd">copy</span> button to copy a prompt to your clipboard.
+  </footer>
+</div>
+
+<button class="totop" id="totop" aria-label="Back to top">↑ Top</button>
+
+<script>
+(() => {
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+  // Tabs: filter sections by id
+  const tabs = $$('#tabs .tab');
+  const sections = $$('section.card');
+  tabs.forEach(t => t.addEventListener('click', () => {
+    tabs.forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    const id = t.dataset.target;
+    if (id === 'all') {
+      sections.forEach(s => s.classList.remove('hidden'));
+    } else {
+      sections.forEach(s => s.classList.toggle('hidden', s.id !== id));
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+    $('#q').value = '';
+  }));
+
+  // Search: filter rows / list items / pills / pre / paragraphs
+  const search = $('#q');
+  search.addEventListener('input', () => {
+    const q = search.value.trim().toLowerCase();
+    if (!q) {
+      sections.forEach(s => {
+        s.classList.remove('hidden');
+        $$('tr, li, .pill, pre, p, h3', s).forEach(el => el.classList.remove('hidden'));
+      });
+      tabs.forEach(x => x.classList.remove('active'));
+      tabs[0].classList.add('active');
+      return;
+    }
+    sections.forEach(s => {
+      let any = false;
+      $$('tr, li, .pill, pre, p', s).forEach(el => {
+        if (el.tagName === 'TR' && el.parentElement.tagName === 'THEAD') return;
+        const hit = el.textContent.toLowerCase().includes(q);
+        el.classList.toggle('hidden', !hit);
+        if (hit) any = true;
+      });
+      // Show all H3 always (they're cheap visual anchors)
+      $$('h3', s).forEach(el => el.classList.remove('hidden'));
+      s.classList.toggle('hidden', !any);
+    });
+  });
+
+  // Copy buttons
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.copy');
+    if (!btn) return;
+    const text = btn.dataset.copy || '';
+    try {
+      await navigator.clipboard.writeText(text);
+      const orig = btn.textContent;
+      btn.textContent = 'copied ✓';
+      setTimeout(() => { btn.textContent = orig; }, 1100);
+    } catch {
+      btn.textContent = 'select & copy';
+    }
+  });
+
+  // Back-to-top
+  const totop = $('#totop');
+  window.addEventListener('scroll', () => {
+    totop.classList.toggle('show', window.scrollY > 600);
+  }, {passive:true});
+  totop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+})();
+</script>
+</body>
+</html>
