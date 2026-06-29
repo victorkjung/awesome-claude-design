@@ -1,0 +1,16 @@
+# Landscout — Cloudflare Worker deployment config
+# Deploy command: npx wrangler deploy
+# Serves landscout/index.html at /landscout on vkj.here.now
+
+name = "landscout"
+compatibility_date = "2025-01-01"
+
+# Static assets: serves index.html for all requests
+[assets]
+directory = "."
+not_found_handling = "single-page-application"
+
+# Route: uncomment and fill in your zone_name to serve at vkj.here.now/landscout*
+# [[routes]]
+# pattern = "vkj.here.now/landscout*"
+# zone_name = "here.now"
