@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Landscout — Land Scouting Intelligence Platform</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+/* ====== RESET & TOKENS ====== */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pink:#FF90E8;--pink-dark:#e06ac8;--pink-light:#fff0fc;
+  --black:#1A1A1A;--white:#FFFFFF;
+  --gray1:#F4F4F0;--gray2:#E8E8E4;--gray3:#C8C8C4;--gray4:#888884;
+  --green:#23A566;--orange:#FF8C00;--red:#E03030;--blue:#0055EE;
+  --border:2px solid #1A1A1A;--radius:12px;
+  --shadow:4px 4px 0 #1A1A1A;--shadow-lg:6px 6px 0 #1A1A1A;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--gray1);color:var(--black);min-height:100vh;font-size:15px;line-height:1.5}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+button{cursor:pointer;font-family:inherit}
+input,select,textarea{font-family:inherit}
+
+/* ====== HEADER ====== */
+#header{position:sticky;top:0;z-index:1000;background:var(--white);border-bottom:var(--border)}
+.header-inner{max-width:1440px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:0 20px;height:60px}
+.logo{font-size:20px;font-weight:900;letter-spacing:-0.5px;display:flex;align-items:center;gap:8px;white-space:nowrap;flex-shrink:0}
+.logo-icon{font-size:22px}
+.logo-badge{background:var(--pink);color:var(--black);font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.5px;border:1px solid var(--black)}
+nav{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+.nav-btn{padding:7px 14px;border:2px solid transparent;border-radius:8px;font-size:13px;font-weight:700;background:none;color:var(--gray4);white-space:nowrap;transition:all .12s;letter-spacing:-.1px}
+.nav-btn:hover{background:var(--gray1);color:var(--black)}
+.nav-btn.active{background:var(--black);color:var(--white);border-color:var(--black)}
+.header-actions{display:flex;gap:8px;flex-shrink:0}
+.hamburger{display:none;flex-direction:column;gap:4px;padding:8px;border:var(--border);border-radius:8px;background:none}
+.hamburger span{display:block;width:18px;height:2px;background:var(--black);border-radius:1px}
+
+/* ====== MOBILE NAV ====== */
+#mobile-nav{display:none;position:fixed;top:60px;left:0;right:0;background:var(--white);border-bottom:var(--border);padding:12px;z-index:999;flex-direction:column;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+#mobile-nav.open{display:flex}
+#mobile-nav .nav-btn{text-align:left}
+.mobile-divider{height:1px;background:var(--gray2);margin:4px 0}
+
+/* ====== BUTTONS ====== */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border:var(--border);border-radius:8px;font-size:13px;font-weight:800;transition:all .12s;white-space:nowrap;letter-spacing:-.1px}
+.btn-pink{background:var(--pink);color:var(--black);box-shadow:var(--shadow)}
+.btn-pink:hover{transform:translate(-2px,-2px);box-shadow:var(--shadow-lg)}
+.btn-pink:active{transform:translate(1px,1px);box-shadow:2px 2px 0 #1A1A1A}
+.btn-white{background:var(--white);color:var(--black);box-shadow:var(--shadow)}
+.btn-white:hover{transform:translate(-2px,-2px);box-shadow:var(--shadow-lg)}
+.btn-white:active{transform:translate(1px,1px);box-shadow:2px 2px 0 #1A1A1A}
+.btn-black{background:var(--black);color:var(--white);box-shadow:var(--shadow)}
+.btn-black:hover{transform:translate(-2px,-2px);box-shadow:var(--shadow-lg)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-danger{background:var(--red);color:var(--white);border-color:var(--red);box-shadow:var(--shadow)}
+.btn-danger:hover{transform:translate(-2px,-2px);box-shadow:var(--shadow-lg)}
+
+/* ====== MAIN ====== */
+main{max-width:1440px;margin:0 auto;padding:24px 20px}
+.section{display:none}.section.active{display:block}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.page-title{font-size:26px;font-weight:900;letter-spacing:-.5px}
+.page-sub{font-size:13px;color:var(--gray4);margin-top:2px}
+
+/* ====== CARDS ====== */
+.card{background:var(--white);border:var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)}
+.card-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px;color:var(--gray4)}
+
+/* ====== KPI GRID ====== */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:20px}
+.kpi{background:var(--white);border:var(--border);border-radius:var(--radius);padding:18px 16px;box-shadow:var(--shadow);border-top-width:4px}
+.kpi-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--gray4);margin-bottom:6px}
+.kpi-value{font-size:28px;font-weight:900;line-height:1;letter-spacing:-1px}
+.kpi-sub{font-size:11px;color:var(--gray4);margin-top:4px}
+.kpi-pink{border-top-color:var(--pink)}
+.kpi-green{border-top-color:var(--green)}
+.kpi-blue{border-top-color:var(--blue)}
+.kpi-orange{border-top-color:var(--orange)}
+.kpi-red{border-top-color:var(--red)}
+.kpi-black{border-top-color:var(--black)}
+
+/* ====== CHARTS ====== */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.chart-card{background:var(--white);border:var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.chart-card canvas{max-height:220px}
+
+/* ====== TABLE ====== */
+.table-wrap{overflow-x:auto;border:var(--border);border-radius:var(--radius);box-shadow:var(--shadow);background:var(--white)}
+table{width:100%;border-collapse:collapse;min-width:900px}
+th{background:var(--black);color:var(--white);padding:11px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--gray2);font-size:13px;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--gray1)}
+th:first-child{border-radius:var(--radius) 0 0 0}
+th:last-child{border-radius:0 var(--radius) 0 0}
+
+/* ====== BADGES ====== */
+.badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:800;border:1px solid transparent;white-space:nowrap}
+.b-green{background:#D4F5E5;color:#156B3C;border-color:#9FE0C0}
+.b-blue{background:#D4E5FF;color:#003AAA;border-color:#9FC2FF}
+.b-orange{background:#FFF0D4;color:#994400;border-color:#FFD080}
+.b-red{background:#FFE0E0;color:#990000;border-color:#FFAAAA}
+.b-gray{background:var(--gray2);color:var(--gray4);border-color:var(--gray3)}
+.b-pink{background:var(--pink-light);color:#880060;border-color:var(--pink)}
+
+/* ====== FILTER BAR ====== */
+.filter-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.filter-bar input,.filter-bar select{padding:9px 12px;border:var(--border);border-radius:8px;font-size:13px;background:var(--white);color:var(--black)}
+.filter-bar input{flex:1;min-width:200px}
+.filter-bar input:focus,.filter-bar select:focus{outline:none;border-color:var(--pink);box-shadow:0 0 0 3px rgba(255,144,232,.2)}
+
+/* ====== MAP ====== */
+#map-el{height:520px;border:var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.map-legend{background:var(--white);border:var(--border);border-radius:var(--radius);padding:14px;margin-top:14px;box-shadow:var(--shadow);display:flex;gap:20px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700}
+.legend-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--black)}
+
+/* ====== MODAL ====== */
+#modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+#modal-overlay.open{display:flex}
+.modal{background:var(--white);border:var(--border);border-radius:var(--radius);box-shadow:8px 8px 0 var(--black);width:100%;max-width:720px;margin:auto}
+.modal-hd{padding:18px 22px;border-bottom:var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:17px;font-weight:900}
+.modal-body{padding:22px}
+.modal-ft{padding:14px 22px;border-top:var(--border);display:flex;gap:8px;justify-content:flex-end}
+
+/* ====== FORM ====== */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg.full{grid-column:1/-1}
+label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--gray4)}
+.inp{padding:10px 12px;border:var(--border);border-radius:8px;font-size:14px;background:var(--white);color:var(--black);width:100%;transition:border-color .12s,box-shadow .12s}
+.inp:focus{outline:none;border-color:var(--pink);box-shadow:0 0 0 3px rgba(255,144,232,.2)}
+.inp.error{border-color:var(--red);box-shadow:0 0 0 3px rgba(224,48,48,.15)}
+textarea.inp{min-height:80px;resize:vertical}
+.field-err{font-size:11px;color:var(--red);font-weight:700;display:none}
+.field-err.show{display:block}
+
+/* ====== CHECKLIST ====== */
+.ck-prop{background:var(--white);border:var(--border);border-radius:var(--radius);margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow)}
+.ck-hd{padding:14px 18px;background:var(--black);color:var(--white);display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.ck-hd:hover{background:#333}
+.ck-hd h3{font-size:14px;font-weight:800}
+.ck-hd-meta{font-size:11px;color:var(--gray3);margin-top:2px}
+.ck-progress-wrap{display:flex;align-items:center;gap:10px}
+.ck-pct{font-size:12px;font-weight:800;color:var(--pink)}
+.ck-bar-outer{width:80px;height:6px;background:rgba(255,255,255,.2);border-radius:3px}
+.ck-bar-inner{height:100%;background:var(--pink);border-radius:3px;transition:width .3s}
+.ck-body{padding:4px 18px;display:none}
+.ck-body.open{display:block}
+.ck-item{display:flex;align-items:flex-start;gap:12px;padding:13px 0;border-bottom:1px solid var(--gray2)}
+.ck-item:last-child{border-bottom:none}
+.ck-cb{width:18px;height:18px;min-width:18px;border:2px solid var(--black);border-radius:4px;cursor:pointer;accent-color:var(--pink);margin-top:2px}
+.ck-text h4{font-size:14px;font-weight:800}
+.ck-text p{font-size:12px;color:var(--gray4);margin-top:3px;line-height:1.5}
+.ck-notes{margin-top:8px}
+.ck-notes textarea{width:100%;padding:7px 10px;border:1px solid var(--gray3);border-radius:6px;font-size:12px;color:var(--gray4);background:var(--gray1);resize:none;min-height:52px;font-family:inherit}
+.ck-notes textarea:focus{outline:none;border-color:var(--pink)}
+
+/* ====== CALCULATOR ====== */
+.calc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+.calc-card{background:var(--white);border:var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)}
+.calc-title{font-size:15px;font-weight:900;margin-bottom:2px}
+.calc-desc{font-size:12px;color:var(--gray4);margin-bottom:18px}
+.calc-field{margin-bottom:12px}
+.calc-result{background:var(--gray1);border:var(--border);border-radius:10px;padding:18px;margin-top:16px;text-align:center}
+.calc-val{font-size:30px;font-weight:900;letter-spacing:-1px}
+.calc-label{font-size:11px;color:var(--gray4);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.calc-extra{font-size:12px;color:var(--gray4);margin-top:8px;line-height:1.5}
+
+/* ====== GLOSSARY ====== */
+.gloss-search{margin-bottom:20px}
+.gloss-search input{width:100%;padding:13px 16px;border:var(--border);border-radius:var(--radius);font-size:15px;background:var(--white);box-shadow:var(--shadow)}
+.gloss-search input:focus{outline:none;border-color:var(--pink);box-shadow:0 0 0 3px rgba(255,144,232,.2)}
+.gloss-letter{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:var(--gray4);padding:10px 0 5px;border-bottom:1px solid var(--gray2);margin-top:8px}
+.gloss-letter:first-child{margin-top:0}
+.gloss-item{padding:13px 0;border-bottom:1px solid var(--gray2)}
+.gloss-item:last-child{border-bottom:none}
+.gloss-term{font-size:15px;font-weight:800}
+.gloss-def{font-size:13px;color:var(--gray4);margin-top:4px;line-height:1.6}
+.gloss-empty{text-align:center;padding:48px;color:var(--gray4)}
+
+/* ====== TOAST ====== */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--black);color:var(--white);padding:12px 20px;border-radius:10px;font-size:13px;font-weight:700;z-index:9999;transform:translateY(80px);opacity:0;transition:all .25s;pointer-events:none;border:var(--border)}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.toast-ok{border-left:4px solid var(--green)}
+#toast.toast-err{border-left:4px solid var(--red)}
+
+/* ====== CONFIRM DIALOG ====== */
+#confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:3000;align-items:center;justify-content:center;padding:20px}
+#confirm-overlay.open{display:flex}
+.confirm-box{background:var(--white);border:var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);padding:28px;max-width:400px;width:100%}
+.confirm-title{font-size:17px;font-weight:900;margin-bottom:8px}
+.confirm-msg{font-size:14px;color:var(--gray4);margin-bottom:24px;line-height:1.5}
+.confirm-btns{display:flex;gap:10px;justify-content:flex-end}
+
+/* ====== SCROLLBAR ====== */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--gray2)}
+::-webkit-scrollbar-thumb{background:var(--gray3);border-radius:3px}
+
+/* ====== RESPONSIVE ====== */
+@media(max-width:1100px){
+  .kpi-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:900px){
+  nav{display:none}
+  .hamburger{display:flex}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .charts-grid{grid-template-columns:1fr}
+  .header-actions{display:none}
+}
+@media(max-width:600px){
+  main{padding:16px}
+  .page-title{font-size:22px}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .form-grid{grid-template-columns:1fr}
+  .calc-grid{grid-template-columns:1fr}
+  #map-el{height:380px}
+}
+@media(max-width:400px){
+  .kpi-grid{grid-template-columns:1fr}
+}
+
+/* ====== DASHBOARD OPPORTUNITY LIST ====== */
+.opp-row{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--gray2)}
+.opp-row:last-child{border-bottom:none}
+.opp-num{width:28px;height:28px;background:var(--pink);border:var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
+.opp-body{flex:1;min-width:0}
+.opp-name{font-size:14px;font-weight:800;margin-bottom:4px}
+.opp-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--gray4)}
+.opp-meta span{display:flex;align-items:center;gap:3px}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- CONFIRM DIALOG -->
+<div id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirm-title">Are you sure?</div>
+    <div class="confirm-msg" id="confirm-msg"></div>
+    <div class="confirm-btns">
+      <button class="btn btn-white" onclick="confirmCancel()">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROPERTY MODAL -->
+<div id="modal-overlay">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title" id="modal-title">Add Property</div>
+      <button class="btn btn-white btn-sm" onclick="closeModal()">✕ Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" id="prop-form">
+        <input type="hidden" id="f-id">
+        <div class="fg full">
+          <label>Property / Address *</label>
+          <input class="inp" id="f-address" placeholder="e.g. Masonville Pond, Cummings Rd, Sidney Center NY" required>
+          <div class="field-err" id="err-address">Address is required</div>
+        </div>
+        <div class="fg">
+          <label>Town / County *</label>
+          <input class="inp" id="f-town" placeholder="e.g. Masonville/Sidney, Delaware" required>
+          <div class="field-err" id="err-town">Town/County is required</div>
+        </div>
+        <div class="fg">
+          <label>Status</label>
+          <select class="inp" id="f-status">
+            <option>Active – top pick</option>
+            <option>Active – scouting</option>
+            <option>Active – scouting (price TBC)</option>
+            <option>Active – scouting (listed ~June 2026)</option>
+            <option>Active – scouting (PRICE CONFLICT)</option>
+            <option>Under Contract</option>
+            <option>Closed</option>
+            <option>Passed</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Acreage</label>
+          <input class="inp" id="f-acres" type="number" min="0" step="0.01" placeholder="e.g. 36.7">
+          <div class="field-err" id="err-acres">Must be a positive number</div>
+        </div>
+        <div class="fg">
+          <label>Price ($)</label>
+          <input class="inp" id="f-price" type="number" min="0" step="1000" placeholder="e.g. 300000">
+          <div class="field-err" id="err-price">Must be a positive number</div>
+        </div>
+        <div class="fg">
+          <label>Watershed / DEP</label>
+          <select class="inp" id="f-watershed">
+            <option>Susquehanna – NO DEP</option>
+            <option>Schoharie Reservoir – DEP LIKELY</option>
+            <option>Below Gilboa Dam – likely NO DEP</option>
+            <option>Unknown</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Development Scale</label>
+          <select class="inp" id="f-scale">
+            <option>Single cabin</option>
+            <option>Single cabin (turnkey-ish)</option>
+            <option>Single cabin / compound</option>
+            <option>Multi-unit / compound</option>
+            <option>Resort / glamping</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Latitude (map pin)</label>
+          <input class="inp" id="f-lat" type="number" step="0.0001" placeholder="e.g. 42.2780">
+          <div class="field-err" id="err-lat">Must be between -90 and 90</div>
+        </div>
+        <div class="fg">
+          <label>Longitude (map pin)</label>
+          <input class="inp" id="f-lng" type="number" step="0.0001" placeholder="e.g. -75.2040">
+          <div class="field-err" id="err-lng">Must be between -180 and 180</div>
+        </div>
+        <div class="fg full">
+          <label>Listing URL</label>
+          <input class="inp" id="f-link" type="url" placeholder="https://www.realtor.com/...">
+          <div class="field-err" id="err-link">Please enter a valid URL (must start with https://)</div>
+        </div>
+        <div class="fg full">
+          <label>Notes / Due Diligence</label>
+          <textarea class="inp" id="f-notes" placeholder="Key notes, action items, observations..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-white" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-pink" onclick="saveProperty()">💾 Save Property</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header id="header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-icon">🌲</span>
+      Landscout
+      <span class="logo-badge">Beta</span>
+    </div>
+    <nav id="main-nav">
+      <button class="nav-btn active" data-s="dashboard">Dashboard</button>
+      <button class="nav-btn" data-s="properties">Properties</button>
+      <button class="nav-btn" data-s="map">Map</button>
+      <button class="nav-btn" data-s="diligence">Due Diligence</button>
+      <button class="nav-btn" data-s="calculator">Calculator</button>
+      <button class="nav-btn" data-s="glossary">Glossary</button>
+    </nav>
+    <div class="header-actions">
+      <button class="btn btn-white btn-sm" onclick="exportExcel()">⬇ Excel</button>
+      <button class="btn btn-white btn-sm" onclick="exportPDF()">⬇ PDF</button>
+      <button class="btn btn-pink btn-sm" onclick="openModal()">+ Add Property</button>
+    </div>
+    <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- MOBILE NAV -->
+<div id="mobile-nav">
+  <button class="nav-btn" data-s="dashboard">Dashboard</button>
+  <button class="nav-btn" data-s="properties">Properties</button>
+  <button class="nav-btn" data-s="map">Map</button>
+  <button class="nav-btn" data-s="diligence">Due Diligence</button>
+  <button class="nav-btn" data-s="calculator">Calculator</button>
+  <button class="nav-btn" data-s="glossary">Glossary</button>
+  <div class="mobile-divider"></div>
+  <button class="btn btn-white btn-sm" onclick="exportExcel();closeMobileNav()">⬇ Export Excel</button>
+  <button class="btn btn-white btn-sm" onclick="exportPDF();closeMobileNav()">⬇ Export PDF</button>
+  <button class="btn btn-pink btn-sm" onclick="openModal();closeMobileNav()">+ Add Property</button>
+</div>
+
+<main>
+
+<!-- ===== DASHBOARD ===== -->
+<div class="section active" id="section-dashboard">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-sub">Unplugged Cabins — Land Scouting Intelligence · July 2026</p>
+    </div>
+    <button class="btn btn-pink" onclick="openModal()">+ Add Property</button>
+  </div>
+
+  <div class="kpi-grid" id="kpi-grid"><!-- rendered --></div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="card-title">Properties by Status</div>
+      <canvas id="chart-status"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="card-title">Price per Acre — All Properties</div>
+      <canvas id="chart-ppa"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="card-title">Watershed Risk Breakdown</div>
+      <canvas id="chart-ws"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="card-title">Acreage by Property</div>
+      <canvas id="chart-acres"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Top Opportunities (scored)</div>
+    <div id="opp-list"><!-- rendered --></div>
+  </div>
+</div>
+
+<!-- ===== PROPERTIES ===== -->
+<div class="section" id="section-properties">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Properties</h1>
+      <p class="page-sub">All scouted parcels — add, edit, or remove</p>
+    </div>
+    <button class="btn btn-pink" onclick="openModal()">+ Add Property</button>
+  </div>
+  <div class="filter-bar">
+    <input type="search" id="prop-search" placeholder="🔍  Search properties, notes, town..." oninput="renderPropertiesTable()">
+    <select id="prop-filter-status" onchange="renderPropertiesTable()">
+      <option value="">All Statuses</option>
+      <option>Active – top pick</option>
+      <option>Active – scouting</option>
+      <option>Active – scouting (price TBC)</option>
+      <option>Active – scouting (listed ~June 2026)</option>
+      <option>Active – scouting (PRICE CONFLICT)</option>
+      <option>Under Contract</option>
+      <option>Closed</option>
+      <option>Passed</option>
+    </select>
+    <select id="prop-filter-ws" onchange="renderPropertiesTable()">
+      <option value="">All Watersheds</option>
+      <option>Susquehanna – NO DEP</option>
+      <option>Schoharie Reservoir – DEP LIKELY</option>
+      <option>Below Gilboa Dam – likely NO DEP</option>
+    </select>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Property / Address</th>
+          <th>Town / County</th>
+          <th>Acres</th>
+          <th>Price</th>
+          <th>$/Acre</th>
+          <th>Status</th>
+          <th>Watershed</th>
+          <th>Scale</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="prop-tbody"><!-- rendered --></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== MAP ===== -->
+<div class="section" id="section-map">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Property Map</h1>
+      <p class="page-sub">Click a marker to view property details</p>
+    </div>
+    <button class="btn btn-white" onclick="mapFitAll()">⊙ Fit All</button>
+  </div>
+  <div id="map-el"></div>
+  <div class="map-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--pink)"></div> Top Pick</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> Scouting</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div> DEP Risk</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Clean Watershed</div>
+  </div>
+</div>
+
+<!-- ===== DUE DILIGENCE ===== -->
+<div class="section" id="section-diligence">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Due Diligence</h1>
+      <p class="page-sub">Pre-offer checklist — run every item before writing an offer</p>
+    </div>
+    <button class="btn btn-white" onclick="exportDiligencePDF()">⬇ Export Checklist PDF</button>
+  </div>
+  <div id="ck-list"><!-- rendered --></div>
+</div>
+
+<!-- ===== CALCULATOR ===== -->
+<div class="section" id="section-calculator">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Real Estate Calculator</h1>
+      <p class="page-sub">Investment analysis tools for land scouting and cabin development</p>
+    </div>
+  </div>
+  <div class="calc-grid">
+
+    <!-- CAP RATE -->
+    <div class="calc-card">
+      <div class="calc-title">Cap Rate Calculator</div>
+      <div class="calc-desc">Net Operating Income ÷ Property Value. Higher cap rate = higher yield (and often more risk).</div>
+      <div class="calc-field">
+        <label>Annual Gross Revenue ($)</label>
+        <input class="inp" id="c1-rev" type="number" min="0" placeholder="e.g. 120,000" oninput="calcCapRate()">
+      </div>
+      <div class="calc-field">
+        <label>Annual Operating Expenses ($)</label>
+        <input class="inp" id="c1-exp" type="number" min="0" placeholder="e.g. 40,000" oninput="calcCapRate()">
+      </div>
+      <div class="calc-field">
+        <label>Property / Purchase Value ($)</label>
+        <input class="inp" id="c1-val" type="number" min="0" placeholder="e.g. 300,000" oninput="calcCapRate()">
+      </div>
+      <div class="calc-result">
+        <div class="calc-val" id="c1-result">—</div>
+        <div class="calc-label">Cap Rate</div>
+        <div class="calc-extra" id="c1-extra">NOI: — | Enter all three values</div>
+      </div>
+    </div>
+
+    <!-- PRICE PER ACRE -->
+    <div class="calc-card">
+      <div class="calc-title">Price per Acre</div>
+      <div class="calc-desc">Quickly benchmark any parcel price against comparable listings in your market.</div>
+      <div class="calc-field">
+        <label>Total Price ($)</label>
+        <input class="inp" id="c2-price" type="number" min="0" placeholder="e.g. 300,000" oninput="calcPPA()">
+      </div>
+      <div class="calc-field">
+        <label>Total Acres</label>
+        <input class="inp" id="c2-acres" type="number" min="0" step="0.01" placeholder="e.g. 36.7" oninput="calcPPA()">
+      </div>
+      <div class="calc-field">
+        <label>Buildable Acres (optional)</label>
+        <input class="inp" id="c2-build" type="number" min="0" step="0.01" placeholder="e.g. 17" oninput="calcPPA()">
+      </div>
+      <div class="calc-result">
+        <div class="calc-val" id="c2-result">—</div>
+        <div class="calc-label">Price per Total Acre</div>
+        <div class="calc-extra" id="c2-extra">Buildable rate: —</div>
+      </div>
+    </div>
+
+    <!-- CABIN REVENUE ESTIMATOR -->
+    <div class="calc-card">
+      <div class="calc-title">Cabin Revenue Estimator</div>
+      <div class="calc-desc">ADR × Occupancy × Cabins − Expenses = Annual NOI. Use AirDNA for comp ADR data.</div>
+      <div class="calc-field">
+        <label>Number of Cabins</label>
+        <input class="inp" id="c3-cabins" type="number" min="1" max="50" value="3" oninput="calcCabins()">
+      </div>
+      <div class="calc-field">
+        <label>Average Daily Rate — ADR ($)</label>
+        <input class="inp" id="c3-adr" type="number" min="0" value="350" oninput="calcCabins()">
+      </div>
+      <div class="calc-field">
+        <label>Occupancy Rate (%)</label>
+        <input class="inp" id="c3-occ" type="number" min="0" max="100" value="65" oninput="calcCabins()">
+      </div>
+      <div class="calc-field">
+        <label>Annual Operating Expenses ($)</label>
+        <input class="inp" id="c3-exp" type="number" min="0" value="60000" oninput="calcCabins()">
+      </div>
+      <div class="calc-result">
+        <div class="calc-val" id="c3-result">—</div>
+        <div class="calc-label">Annual NOI</div>
+        <div class="calc-extra" id="c3-extra">Gross: — | Occ. days/cabin: —</div>
+      </div>
+    </div>
+
+    <!-- ROI EXIT -->
+    <div class="calc-card">
+      <div class="calc-title">ROI / Exit Calculator</div>
+      <div class="calc-desc">18-month build-to-sell return analysis. Exit value = NOI ÷ Exit Cap Rate.</div>
+      <div class="calc-field">
+        <label>Land Purchase Price ($)</label>
+        <input class="inp" id="c4-land" type="number" min="0" placeholder="e.g. 300,000" oninput="calcROI()">
+      </div>
+      <div class="calc-field">
+        <label>Build / Development Cost ($)</label>
+        <input class="inp" id="c4-build" type="number" min="0" placeholder="e.g. 450,000" oninput="calcROI()">
+      </div>
+      <div class="calc-field">
+        <label>Annual NOI ($)</label>
+        <input class="inp" id="c4-noi" type="number" min="0" placeholder="e.g. 120,000" oninput="calcROI()">
+      </div>
+      <div class="calc-field">
+        <label>Exit Cap Rate (%)</label>
+        <input class="inp" id="c4-cap" type="number" min="0" step="0.25" value="8" oninput="calcROI()">
+      </div>
+      <div class="calc-result">
+        <div class="calc-val" id="c4-result">—</div>
+        <div class="calc-label">Projected ROI</div>
+        <div class="calc-extra" id="c4-extra">Exit value: — | Profit: —</div>
+      </div>
+    </div>
+
+    <!-- LAND LOAN -->
+    <div class="calc-card">
+      <div class="calc-title">Land Loan Calculator</div>
+      <div class="calc-desc">Monthly payment for raw land financing. Typical land loans: 20–30% down, 6–9% rate, 5–15 yr term.</div>
+      <div class="calc-field">
+        <label>Loan Amount ($)</label>
+        <input class="inp" id="c5-amt" type="number" min="0" placeholder="e.g. 240,000" oninput="calcLoan()">
+      </div>
+      <div class="calc-field">
+        <label>Annual Interest Rate (%)</label>
+        <input class="inp" id="c5-rate" type="number" min="0" step="0.25" value="7.5" oninput="calcLoan()">
+      </div>
+      <div class="calc-field">
+        <label>Term (months)</label>
+        <input class="inp" id="c5-term" type="number" min="1" value="60" oninput="calcLoan()">
+      </div>
+      <div class="calc-result">
+        <div class="calc-val" id="c5-result">—</div>
+        <div class="calc-label">Monthly Payment</div>
+        <div class="calc-extra" id="c5-extra">Total interest: — | Total cost: —</div>
+      </div>
+    </div>
+
+    <!-- INFRASTRUCTURE -->
+    <div class="calc-card">
+      <div class="calc-title">Infrastructure Budget</div>
+      <div class="calc-desc">Estimate site prep costs before making an offer. These are often the hidden expense on raw land.</div>
+      <div class="calc-field">
+        <label>Well Drilling ($)</label>
+        <input class="inp" id="c6-well" type="number" min="0" value="15000" oninput="calcInfra()">
+      </div>
+      <div class="calc-field">
+        <label>Septic System ($)</label>
+        <input class="inp" id="c6-sep" type="number" min="0" value="25000" oninput="calcInfra()">
+      </div>
+      <div class="calc-field">
+        <label>Electric Run / Service ($)</label>
+        <input class="inp" id="c6-elec" type="number" min="0" value="10000" oninput="calcInfra()">
+      </div>
+      <div class="calc-field">
+        <label>Driveway / Access Road ($)</label>
+        <input class="inp" id="c6-drv" type="number" min="0" value="20000" oninput="calcInfra()">
+      </div>
+      <div class="calc-field">
+        <label>Other / Contingency ($)</label>
+        <input class="inp" id="c6-other" type="number" min="0" value="10000" oninput="calcInfra()">
+      </div>
+      <div class="calc-result">
+        <div class="calc-val" id="c6-result">—</div>
+        <div class="calc-label">Total Infrastructure Budget</div>
+        <div class="calc-extra" id="c6-extra">—</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== GLOSSARY ===== -->
+<div class="section" id="section-glossary">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Glossary</h1>
+      <p class="page-sub">Real estate, land scouting, and regulatory terms</p>
+    </div>
+  </div>
+  <div class="gloss-search">
+    <input type="search" id="gloss-input" placeholder="🔍  Search terms or definitions..." oninput="renderGlossary()">
+  </div>
+  <div id="gloss-list"><!-- rendered --></div>
+</div>
+
+</main>
+
+<!-- SCRIPTS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* ============================================================
+   LANDSCOUT — Data, State, Logic
+   ============================================================ */
+
+// ---- SEED DATA ----
+const SEED_PROPERTIES = [
+  {id:1,address:"Masonville Pond, Cummings Rd, Sidney Center NY 13839",town:"Masonville/Sidney, Delaware",acres:36.7,price:300000,status:"Active – top pick",watershed:"Susquehanna – NO DEP",scale:"Resort / glamping",lat:42.2780,lng:-75.2040,link:"",notes:"~17 buildable ac wrapped around shared ~20-ac lake; own NORTH shore only (~1,000+ ft frontage). Took $60K drop. FEMA Zone A on shoreline (widest at west inlet), Zone X upland. CONFIRM TOWN LINE (Sidney zoned 2021 vs Masonville unzoned). DAM: NY01475 Masonville Dam at outlet — 30 ft EARTHEN, 230 ac-ft, Low hazard, NOT RATED condition, NO listed spillway. Confirm dam conveys + get dam-safety engineer inspection."},
+  {id:2,address:"0 Baker Rd, Sidney Center NY 13839",town:"Sidney Center, Delaware",acres:7.7,price:49900,status:"Active – scouting (price TBC)",watershed:"Susquehanna – NO DEP",scale:"Single cabin",lat:42.2820,lng:-75.1960,link:"",notes:"Same hamlet as Masonville Pond — Susquehanna side, NO NYC DEP. Listed by Howard Hanna (607-563-1020), private road, vacant/unimproved. PRICE UNCONFIRMED: pull real price from agent. Small single-cabin scale at 7.7ac. SAME TOWN-LINE QUESTION as Masonville — confirm which town."},
+  {id:3,address:"L9 Harrington, Gilboa NY 12076",town:"Gilboa, Schoharie",acres:9,price:49900,status:"Active – scouting",watershed:"Schoharie Reservoir – DEP LIKELY",scale:"Single cabin",lat:42.3770,lng:-74.4380,link:"",notes:"Cheap single-cabin lot. WATERSHED TRAP: most of Gilboa drains to Schoharie Reservoir (NYC supply) = DEP septic approval before permit. EXCEPTION: northern slice below Gilboa Dam drains OUT — confirm which side L9 sits on. Budget ATU+drip ($20-30K) if in watershed. Need exact acreage + tax ID."},
+  {id:4,address:"Lot 29 Peters Ln, Gilboa NY 12076",town:"Gilboa, Schoharie",acres:7.39,price:37500,status:"Active – scouting (listed ~June 2026)",watershed:"Schoharie Reservoir – DEP LIKELY",scale:"Single cabin",lat:42.3820,lng:-74.4410,link:"",notes:"Cheapest Gilboa lot at $5,074/ac. Listed by Keller Williams (607-652-3311), ~4 days on market. 7.39 ac mostly WOODED, SLOPING. Quirk: land on BOTH SIDES of a private road. WATERSHED TRAP same as L9. Single-cabin play, not a resort. Need tax ID + perc/slope read."},
+  {id:5,address:"L11 Sternberg Rd, Jefferson NY 12167",town:"Jefferson, Schoharie",acres:22.6,price:79900,status:"Active – scouting (price varies $79,900–$89,900)",watershed:"Below Gilboa Dam – likely NO DEP",scale:"Single cabin / compound",lat:42.4930,lng:-74.5190,link:"",notes:"Jefferson = home turf (same town as Lot 17, near Mountain Milla). HIGH-ELEVATION, wooded, 'breathtaking views'. Two deeded lots = family compound / multi-unit potential. Listed by Country Boy Realty; aged listing = negotiating room. CONFIRM real/separate parcel ID + deed — cross-list data error with Mariya's Lot 17 parcels. Jefferson unzoned + below Gilboa Dam = clean."},
+  {id:6,address:"1-20 Sternberg Rd, Jefferson NY 12093",town:"Jefferson, Schoharie",acres:32.4,price:129000,status:"Active – scouting",watershed:"Below Gilboa Dam – likely NO DEP",scale:"Multi-unit / compound",lat:42.4900,lng:-74.5200,link:"",notes:"Biggest Jefferson prospect — 32.4 ac at ~$3,981/ac. Same Sternberg Rd corridor as L11. Acreage gives real multi-cabin / phased-build room. Jefferson unzoned + below Gilboa Dam = clean (no NYC watershed/DEP), but CONFIRM. TO VERIFY: exact tax ID/SBL, road frontage & legal access, topo/slope for buildable area, perc."},
+  {id:7,address:"156 Akita Ln, Jefferson NY 12093",town:"Jefferson, Schoharie",acres:4.38,price:75000,status:"Active – scouting (PRICE CONFLICT)",watershed:"Below Gilboa Dam – likely NO DEP",scale:"Single cabin (turnkey-ish)",lat:42.4880,lng:-74.5170,link:"",notes:"Parcel 156.-2-45. Taxes ~$746/yr. MOST IMPROVED lot on sheet: underground electric ALREADY run to center (big cost saver), cable available, existing driveway, cleared areas + stone walls. Amish-built tiny structure (UNFINISHED interior) + older camper (NO papers). PRICE MESSY: $60K/$75K/$125K across portals — $75K is consistent current figure. NO WELL (budget drill). Single cabin only at 4.38ac. VERIFY: actual list price w/ agent, structure C of O path, camper title."}
+];
+
+const DILIGENCE = [
+  {id:1,check:"Watershed line — in or out of NYC DEP",why:"DEP = septic approval before permit; the expensive, slow wall. Tax map + DEP boundary. North-of-Gilboa-Dam = clean."},
+  {id:2,check:"Town zoning / STR posture / moratoriums",why:"5-min call to town clerk: any local laws, moratoriums, pending land-use regs. Unzoned towns (Blenheim/Fulton/Masonville) are cleanest."},
+  {id:3,check:"Septic feasibility — perc / slope / soils",why:"County Health. If won't perc: ATU+drip dispersal (~$20-30K) is the DEP-friendly path. If swamp/floodplain/ledge — walk."},
+  {id:4,check:"FEMA flood zone",why:"FEMA map panel. Zone A/AE = removable amenities only, no permanent foundations in the band."},
+  {id:5,check:"Dam on/near parcel — if any pond",why:"NID + NYS DEC dam inventory. Check hazard class, condition, spillway, owner. Does the dam CONVEY? Earthen + not-rated + no spillway = engineer inspection."},
+  {id:6,check:"Existing structures — Certificate of Occupancy",why:"Verify C of O. Asset (free caretaker unit) vs liability (teardown). Unpermitted structures = lender and insurance problems."},
+  {id:7,check:"Road frontage / access / DOT permit",why:"State highway frontage = easy access permit, rig turning, signage. Confirm legal access — no landlocked / easement gaps."},
+  {id:8,check:"Utilities at road — electric / NYSEG",why:"Overhead aerial run cost; hybrid overhead-to-underground near cabin for clean look. Well + septic budget separately."},
+  {id:9,check:"ADR / STR comp data",why:"AirDNA + comparable listings. Thin-data markets = underwrite conservatively, don't invent a number."},
+  {id:10,check:"Exit comp check — BizQuest / income-producing comps",why:"BizQuest for income-producing asset comps. Confirm the 18-month turnkey sale story holds at this location and price point."}
+];
+
+const GLOSSARY_DATA = [
+  {term:"ADR",def:"Average Daily Rate — the average rental revenue earned per occupied night. Key metric for short-term rental (STR/glamping) underwriting. Use AirDNA for market comps."},
+  {term:"ATU",def:"Advanced Treatment Unit — an engineered septic system that pre-treats wastewater (typically to less than 10 mg/L BOD) before dispersal. Required by NYC DEP in watershed areas where conventional septic isn't approved."},
+  {term:"BizQuest",def:"Online marketplace for income-producing businesses and properties. Use it to find comparable turnkey-asset sales when doing an exit comp check to validate the 18-month build-to-sell story."},
+  {term:"BFE",def:"Base Flood Elevation — the calculated water surface elevation for the 1% annual chance flood. Used by FEMA in Zone AE mapping to set the lowest floor elevation for new construction."},
+  {term:"Cap Rate",def:"Capitalization Rate — NOI ÷ Property Value. Measures the unlevered yield on an income-producing asset. Rural glamping assets typically trade at 8–12% cap rates."},
+  {term:"C of O",def:"Certificate of Occupancy — official government document confirming a structure meets local building codes and is legally occupiable. Existing structures without a C of O can be liabilities, especially with lenders."},
+  {term:"DEP",def:"NYC Department of Environmental Protection — regulates land use and on-site wastewater treatment within New York City's watershed supply areas (Catskill, Delaware, and Croton basins). Properties inside these areas require DEP septic approval before any permit."},
+  {term:"Drip Dispersal",def:"A type of advanced septic dispersal system that slowly releases treated effluent via subsurface tubing. Often paired with ATU in steep or wet soils. Installed cost ~$20,000–$30,000 in upstate NY."},
+  {term:"Easement",def:"A legal right for one party to use another's land for a specific, defined purpose (e.g., ingress/egress, utilities). Flag-lot or landlocked parcels often rely on access easements — confirm these are recorded and gap-free in the title search."},
+  {term:"FEMA Flood Zone",def:"Federal Emergency Management Agency designation of flood risk. Zone X = minimal flood risk. Zone A = high risk (1% annual chance), no BFE established. Zone AE = high risk with BFE determined. Avoid permanent foundations in A/AE zones."},
+  {term:"Fee Simple",def:"Absolute, unconditional ownership of land with no limitations or conditions attached. The cleanest title form — what you want when buying raw land."},
+  {term:"Glamping",def:"Glamorous camping — premium, design-forward short-term accommodations (cabins, yurts, geodesic domes, safari tents) on rural land. High ADR potential relative to build cost. Core exit product for this scouting tracker."},
+  {term:"NID",def:"National Inventory of Dams — USACE federal database cataloguing dams by size, location, hazard classification, and condition. Essential check if a parcel includes or borders a pond — earthen + not-rated + no spillway = engineer inspection required."},
+  {term:"NOI",def:"Net Operating Income — Gross Revenue minus Operating Expenses (excluding debt service and depreciation). Numerator in the cap rate formula and the core income metric for asset valuation."},
+  {term:"NYSEG",def:"New York State Electric and Gas Corporation — the utility provider across much of upstate New York. Contact them for service territory confirmation and cost to extend overhead/underground electric to a parcel."},
+  {term:"Perc Test",def:"Percolation test — measures soil drainage rate (minutes per inch). Required by county health departments to determine if conventional gravity septic is feasible. Slow perc (>60 min/in) or floodplain/ledge typically requires ATU+drip."},
+  {term:"RevPAR",def:"Revenue Per Available Room (or cabin) — ADR × Occupancy Rate. A better performance metric than ADR alone because it captures vacancy. Target RevPAR $200+ for strong cabin economics."},
+  {term:"SBL",def:"Section-Block-Lot — standardized parcel identifier on New York county tax maps. Always cross-check the SBL when verifying property records to avoid confusing adjacent parcels (a known data-error risk in Jefferson NY listings)."},
+  {term:"STR",def:"Short-Term Rental — any rental of less than 30 days (Airbnb, VRBO, Hipcamp). Some upstate NY towns have STR moratoriums or local laws restricting them — call the town clerk before underwriting to confirm STR is permitted."},
+  {term:"Turnkey Asset",def:"A fully operational, income-producing property ready for a buyer to acquire and immediately generate revenue. The 18-month build-to-turnkey-sale is the core exit strategy for this project."},
+  {term:"Watershed",def:"A land area that drains water into a common receiving body. NYC's Catskill/Delaware/Schoharie watersheds have strict DEP regulations — any on-site sewage system inside the watershed requires DEP design review and approval before a building permit is issued."},
+  {term:"Zone A / AE",def:"FEMA Special Flood Hazard Area (SFHA) — the 100-year floodplain. Zone A has no computed BFE; Zone AE has mapped BFE. Both restrict permanent structures. Usable for removable glamping amenities with proper floodproofing."}
+];
+
+// ---- STATE ----
+let props = [];
+let checks = {};
+let mapInst = null;
+let mapMarkers = [];
+let charts = {};
+let confirmCb = null;
+
+// ---- STORAGE ----
+function loadState() {
+  try {
+    const ps = localStorage.getItem('ls_props');
+    props = ps ? JSON.parse(ps) : deepClone(SEED_PROPERTIES);
+    const cs = localStorage.getItem('ls_checks');
+    checks = cs ? JSON.parse(cs) : {};
+  } catch(e) {
+    props = deepClone(SEED_PROPERTIES);
+    checks = {};
+  }
+}
+function saveProps() { localStorage.setItem('ls_props',JSON.stringify(props)); }
+function saveChecks() { localStorage.setItem('ls_checks',JSON.stringify(checks)); }
+function deepClone(x) { return JSON.parse(JSON.stringify(x)); }
+
+// ---- NAVIGATION ----
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  document.querySelectorAll('[data-s="'+name+'"]').forEach(b => b.classList.add('active'));
+  closeMobileNav();
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'map') { setTimeout(initMap, 80); }
+  if (name === 'diligence') renderDiligence();
+}
+document.querySelectorAll('[data-s]').forEach(btn => {
+  btn.addEventListener('click', () => showSection(btn.dataset.s));
+});
+function toggleMobileNav() {
+  document.getElementById('mobile-nav').classList.toggle('open');
+}
+function closeMobileNav() {
+  document.getElementById('mobile-nav').classList.remove('open');
+}
+
+// ---- CONFIRM DIALOG ----
+function showConfirm(title, msg, okLabel, cb) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('confirm-ok-btn').textContent = okLabel || 'Delete';
+  document.getElementById('confirm-ok-btn').onclick = () => { hideConfirm(); cb(); };
+  document.getElementById('confirm-overlay').classList.add('open');
+  confirmCb = cb;
+}
+function confirmCancel() { hideConfirm(); }
+function hideConfirm() { document.getElementById('confirm-overlay').classList.remove('open'); }
+
+// ---- TOAST ----
+let toastTimer;
+function toast(msg, type='ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show toast-' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = '', 3200);
+}
+
+// ---- HELPERS ----
+function fmtCurrency(n, compact) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  if (compact) {
+    if (n >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
+    if (n >= 1000) return '$' + Math.round(n/1000) + 'K';
+  }
+  return '$' + Math.round(n).toLocaleString();
+}
+function fmtPct(n) { return isNaN(n) || !isFinite(n) ? '—' : n.toFixed(2) + '%'; }
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function statusBadge(s) {
+  if (!s) return '<span class="badge b-gray">—</span>';
+  const short = s.replace('Active – ','').replace(/\s*\(.*$/,'');
+  const cls = s.includes('top pick') ? 'b-green' :
+               s.includes('scouting') ? 'b-blue' :
+               s.includes('Contract') ? 'b-orange' :
+               s.includes('Closed') ? 'b-gray' :
+               s.includes('Passed') ? 'b-red' : 'b-blue';
+  return `<span class="badge ${cls}">${esc(short)}</span>`;
+}
+function wsBadge(ws) {
+  if (!ws) return '<span class="badge b-gray">—</span>';
+  const risk = ws.includes('DEP LIKELY');
+  const short = risk ? '⚠ DEP Risk' : '✓ Clean';
+  return `<span class="badge ${risk ? 'b-red' : 'b-green'}">${short}</span>`;
+}
+function scoreProp(p) {
+  let s = 0;
+  if (p.status === 'Active – top pick') s += 10;
+  if (p.watershed && !p.watershed.includes('DEP LIKELY')) s += 5;
+  if ((p.acres||0) > 20) s += 3;
+  if (p.price && p.acres && (p.price/p.acres) < 5000) s += 4;
+  if (p.status && p.status.includes('scouting') && !p.status.includes('PRICE')) s += 2;
+  return s;
+}
+
+// ---- DASHBOARD ----
+function renderDashboard() {
+  renderKPIs();
+  renderCharts();
+  renderOpportunities();
+}
+function renderKPIs() {
+  const totalAcres = props.reduce((a,p) => a + (parseFloat(p.acres)||0), 0);
+  const totalVal = props.reduce((a,p) => a + (parseFloat(p.price)||0), 0);
+  const ppaList = props.filter(p=>p.acres&&p.price).map(p=>p.price/p.acres);
+  const avgPPA = ppaList.length ? ppaList.reduce((a,b)=>a+b)/ppaList.length : 0;
+  const depRisk = props.filter(p=>p.watershed&&p.watershed.includes('DEP LIKELY')).length;
+  const topPick = props.filter(p=>p.status==='Active – top pick').length;
+  const clean = props.length - depRisk;
+
+  document.getElementById('kpi-grid').innerHTML = `
+    <div class="kpi kpi-pink"><div class="kpi-label">Properties</div><div class="kpi-value">${props.length}</div><div class="kpi-sub">${topPick} top pick${topPick!==1?'s':''}</div></div>
+    <div class="kpi kpi-green"><div class="kpi-label">Total Acreage</div><div class="kpi-value">${totalAcres.toFixed(1)}</div><div class="kpi-sub">Acres scouted</div></div>
+    <div class="kpi kpi-blue"><div class="kpi-label">Portfolio Value</div><div class="kpi-value">${fmtCurrency(totalVal,true)}</div><div class="kpi-sub">Combined listings</div></div>
+    <div class="kpi kpi-orange"><div class="kpi-label">Avg $/Acre</div><div class="kpi-value">${fmtCurrency(avgPPA,true)}</div><div class="kpi-sub">${ppaList.length} priced parcels</div></div>
+    <div class="kpi kpi-red"><div class="kpi-label">DEP Risk</div><div class="kpi-value">${depRisk}</div><div class="kpi-sub">In NYC watershed</div></div>
+    <div class="kpi kpi-black"><div class="kpi-label">Clean WS</div><div class="kpi-value">${clean}</div><div class="kpi-sub">No DEP restriction</div></div>
+  `;
+}
+function renderCharts() {
+  Object.values(charts).forEach(c => { try { c.destroy(); } catch(e){} });
+  charts = {};
+
+  // Status doughnut
+  const statusMap = {};
+  props.forEach(p => {
+    const k = (p.status||'Unknown').replace('Active – ','').replace(/\s*\(.*$/,'');
+    statusMap[k] = (statusMap[k]||0) + 1;
+  });
+  charts.status = new Chart(document.getElementById('chart-status'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(statusMap),
+      datasets: [{ data: Object.values(statusMap), backgroundColor: ['#FF90E8','#23A566','#0055EE','#FF8C00','#E03030','#888884','#1A1A1A'], borderColor:'#1A1A1A', borderWidth:2 }]
+    },
+    options: { plugins: { legend:{ position:'bottom', labels:{ font:{size:11,weight:'bold'} } } }, responsive:true }
+  });
+
+  // Price per acre bar
+  const ppaProps = props.filter(p=>p.acres&&p.price);
+  charts.ppa = new Chart(document.getElementById('chart-ppa'), {
+    type: 'bar',
+    data: {
+      labels: ppaProps.map(p => p.address.split(',')[0].substring(0,22)),
+      datasets: [{ label: '$/Acre', data: ppaProps.map(p => Math.round(p.price/p.acres)), backgroundColor:'#FF90E8', borderColor:'#1A1A1A', borderWidth:2, borderRadius:6 }]
+    },
+    options: { plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true } }, responsive:true }
+  });
+
+  // Watershed pie
+  const wsMap = {};
+  props.forEach(p => {
+    const k = !p.watershed ? 'Unknown' : p.watershed.includes('NO DEP') ? 'No DEP' : p.watershed.includes('DEP LIKELY') ? 'DEP Likely' : 'Likely No DEP';
+    wsMap[k] = (wsMap[k]||0)+1;
+  });
+  charts.ws = new Chart(document.getElementById('chart-ws'), {
+    type: 'pie',
+    data: {
+      labels: Object.keys(wsMap),
+      datasets: [{ data: Object.values(wsMap), backgroundColor: ['#23A566','#E03030','#FF8C00','#888884'], borderColor:'#1A1A1A', borderWidth:2 }]
+    },
+    options: { plugins:{ legend:{ position:'bottom', labels:{ font:{size:11,weight:'bold'} } } }, responsive:true }
+  });
+
+  // Acreage horizontal bar
+  charts.acres = new Chart(document.getElementById('chart-acres'), {
+    type: 'bar',
+    data: {
+      labels: props.map(p => p.address.split(',')[0].substring(0,22)),
+      datasets: [{ label:'Acres', data: props.map(p => parseFloat(p.acres)||0), backgroundColor:'#1A1A1A', borderRadius:4 }]
+    },
+    options: { indexAxis:'y', plugins:{ legend:{display:false} }, scales:{ x:{ beginAtZero:true } }, responsive:true }
+  });
+}
+function renderOpportunities() {
+  const sorted = [...props].sort((a,b)=>scoreProp(b)-scoreProp(a)).slice(0,5);
+  const el = document.getElementById('opp-list');
+  if (!sorted.length) { el.innerHTML='<p style="color:var(--gray4);padding:16px">No properties yet.</p>'; return; }
+  el.innerHTML = sorted.map((p,i) => `
+    <div class="opp-row">
+      <div class="opp-num">${i+1}</div>
+      <div class="opp-body">
+        <div class="opp-name">${esc(p.address.split(',')[0])}</div>
+        <div class="opp-meta">
+          <span>📍 ${esc(p.town||'—')}</span>
+          <span>📐 ${p.acres||'—'} ac</span>
+          <span>💰 ${p.price?'$'+Number(p.price).toLocaleString():'—'}</span>
+          <span>${wsBadge(p.watershed)}</span>
+          <span>${statusBadge(p.status)}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ---- PROPERTIES TABLE ----
+function renderPropertiesTable() {
+  const q = (document.getElementById('prop-search')?.value||'').toLowerCase();
+  const fs = document.getElementById('prop-filter-status')?.value||'';
+  const fw = document.getElementById('prop-filter-ws')?.value||'';
+  let filtered = props.filter(p => {
+    const text = [p.address,p.town,p.notes,p.scale].join(' ').toLowerCase();
+    return (!q || text.includes(q)) && (!fs || p.status===fs) && (!fw || p.watershed===fw);
+  });
+  const tbody = document.getElementById('prop-tbody');
+  if (!tbody) return;
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--gray4)">No properties match your filters.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtered.map(p => `
+    <tr>
+      <td>
+        <div style="font-weight:800;font-size:13px;margin-bottom:2px">${esc(p.address)}</div>
+        ${p.link ? `<a href="${esc(p.link)}" target="_blank" rel="noopener noreferrer" style="font-size:11px">↗ View listing</a>` : ''}
+      </td>
+      <td style="font-size:13px">${esc(p.town||'—')}</td>
+      <td style="font-weight:800">${p.acres||'—'}</td>
+      <td style="font-weight:800">${p.price?'$'+Number(p.price).toLocaleString():'—'}</td>
+      <td>${(p.price&&p.acres)?'$'+Math.round(p.price/p.acres).toLocaleString():'—'}</td>
+      <td>${statusBadge(p.status)}</td>
+      <td>${wsBadge(p.watershed)}</td>
+      <td style="font-size:12px">${esc(p.scale||'—')}</td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-white btn-sm" onclick="openModal(${p.id})">✏ Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="confirmDelete(${p.id})">✕</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ---- MODAL / PROPERTY FORM ----
+function openModal(id) {
+  const overlay = document.getElementById('modal-overlay');
+  clearFormErrors();
+
+  if (id) {
+    const p = props.find(x=>x.id===id);
+    if (!p) return;
+    document.getElementById('modal-title').textContent = 'Edit Property';
+    document.getElementById('f-id').value = p.id;
+    document.getElementById('f-address').value = p.address||'';
+    document.getElementById('f-town').value = p.town||'';
+    document.getElementById('f-status').value = p.status||'Active – scouting';
+    document.getElementById('f-acres').value = p.acres||'';
+    document.getElementById('f-price').value = p.price||'';
+    document.getElementById('f-watershed').value = p.watershed||'Unknown';
+    document.getElementById('f-scale').value = p.scale||'Single cabin';
+    document.getElementById('f-lat').value = p.lat||'';
+    document.getElementById('f-lng').value = p.lng||'';
+    document.getElementById('f-link').value = p.link||'';
+    document.getElementById('f-notes').value = p.notes||'';
+  } else {
+    document.getElementById('modal-title').textContent = 'Add Property';
+    document.getElementById('f-id').value = '';
+    document.getElementById('f-address').value = '';
+    document.getElementById('f-town').value = '';
+    document.getElementById('f-status').value = 'Active – scouting';
+    document.getElementById('f-acres').value = '';
+    document.getElementById('f-price').value = '';
+    document.getElementById('f-watershed').value = 'Unknown';
+    document.getElementById('f-scale').value = 'Single cabin';
+    document.getElementById('f-lat').value = '';
+    document.getElementById('f-lng').value = '';
+    document.getElementById('f-link').value = '';
+    document.getElementById('f-notes').value = '';
+  }
+  overlay.classList.add('open');
+  document.getElementById('f-address').focus();
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+function clearFormErrors() {
+  ['address','town','acres','price','lat','lng','link'].forEach(f => {
+    const inp = document.getElementById('f-'+f);
+    const err = document.getElementById('err-'+f);
+    if (inp) inp.classList.remove('error');
+    if (err) err.classList.remove('show');
+  });
+}
+function setFieldError(field, msg) {
+  const inp = document.getElementById('f-'+field);
+  const err = document.getElementById('err-'+field);
+  if (inp) inp.classList.add('error');
+  if (err) { if (msg) err.textContent = msg; err.classList.add('show'); }
+}
+function saveProperty() {
+  clearFormErrors();
+  let valid = true;
+  const address = document.getElementById('f-address').value.trim();
+  const town = document.getElementById('f-town').value.trim();
+  const acresRaw = document.getElementById('f-acres').value.trim();
+  const priceRaw = document.getElementById('f-price').value.trim();
+  const latRaw = document.getElementById('f-lat').value.trim();
+  const lngRaw = document.getElementById('f-lng').value.trim();
+  const link = document.getElementById('f-link').value.trim();
+
+  if (!address) { setFieldError('address','Address is required'); valid=false; }
+  if (!town) { setFieldError('town','Town/County is required'); valid=false; }
+  if (acresRaw && (isNaN(parseFloat(acresRaw)) || parseFloat(acresRaw) < 0)) { setFieldError('acres','Must be a positive number'); valid=false; }
+  if (priceRaw && (isNaN(parseFloat(priceRaw)) || parseFloat(priceRaw) < 0)) { setFieldError('price','Must be a positive number'); valid=false; }
+  if (latRaw) {
+    const v = parseFloat(latRaw);
+    if (isNaN(v) || v < -90 || v > 90) { setFieldError('lat','Must be between -90 and 90'); valid=false; }
+  }
+  if (lngRaw) {
+    const v = parseFloat(lngRaw);
+    if (isNaN(v) || v < -180 || v > 180) { setFieldError('lng','Must be between -180 and 180'); valid=false; }
+  }
+  if (link) {
+    try { new URL(link); if (!link.startsWith('http')) throw new Error(); }
+    catch { setFieldError('link','Must be a valid URL starting with https://'); valid=false; }
+  }
+  if (!valid) { toast('Please fix the highlighted fields', 'err'); return; }
+
+  const data = {
+    address,
+    town,
+    status: document.getElementById('f-status').value,
+    acres: acresRaw ? parseFloat(acresRaw) : null,
+    price: priceRaw ? parseFloat(priceRaw) : null,
+    watershed: document.getElementById('f-watershed').value,
+    scale: document.getElementById('f-scale').value,
+    lat: latRaw ? parseFloat(latRaw) : null,
+    lng: lngRaw ? parseFloat(lngRaw) : null,
+    link: link || '',
+    notes: document.getElementById('f-notes').value.trim()
+  };
+
+  const existId = parseInt(document.getElementById('f-id').value);
+  if (existId) {
+    const idx = props.findIndex(p=>p.id===existId);
+    if (idx >= 0) props[idx] = { ...props[idx], ...data };
+    toast('Property updated!');
+  } else {
+    const newId = props.length ? Math.max(...props.map(p=>p.id)) + 1 : 1;
+    props.push({ id:newId, ...data });
+    toast('Property added!');
+  }
+  saveProps();
+  closeModal();
+  renderPropertiesTable();
+  if (document.getElementById('section-dashboard').classList.contains('active')) renderDashboard();
+  if (document.getElementById('section-diligence').classList.contains('active')) renderDiligence();
+}
+function confirmDelete(id) {
+  const p = props.find(x=>x.id===id);
+  if (!p) return;
+  showConfirm('Delete Property', `"${p.address.split(',')[0]}" will be permanently removed.`, 'Delete', () => deleteProperty(id));
+}
+function deleteProperty(id) {
+  props = props.filter(p=>p.id!==id);
+  saveProps();
+  renderPropertiesTable();
+  if (document.getElementById('section-dashboard').classList.contains('active')) renderDashboard();
+  toast('Property deleted', 'err');
+}
+
+// ---- MAP ----
+function initMap() {
+  if (mapInst) {
+    mapInst.invalidateSize();
+    updateMapMarkers();
+    return;
+  }
+  mapInst = L.map('map-el').setView([42.42, -74.85], 9);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+    maxZoom: 19
+  }).addTo(mapInst);
+  updateMapMarkers();
+}
+function updateMapMarkers() {
+  if (!mapInst) return;
+  mapMarkers.forEach(m => mapInst.removeLayer(m));
+  mapMarkers = [];
+  props.forEach(p => {
+    if (!p.lat || !p.lng) return;
+    const isTop = p.status === 'Active – top pick';
+    const isDEP = p.watershed && p.watershed.includes('DEP LIKELY');
+    const color = isTop ? '#FF90E8' : isDEP ? '#FF8C00' : '#0055EE';
+    const border = isTop ? '#1A1A1A' : '#fff';
+    const icon = L.divIcon({
+      html: `<div style="width:14px;height:14px;background:${color};border:2px solid ${border};border-radius:50%;box-shadow:2px 2px 4px rgba(0,0,0,.35)"></div>`,
+      iconSize:[14,14],iconAnchor:[7,7],className:''
+    });
+    const m = L.marker([p.lat,p.lng],{icon}).addTo(mapInst);
+    m.bindPopup(`
+      <div style="font-family:-apple-system,sans-serif;min-width:210px">
+        <div style="font-weight:800;font-size:13px;margin-bottom:3px">${esc(p.address.split(',')[0])}</div>
+        <div style="font-size:11px;color:#888;margin-bottom:10px">${esc(p.town||'')}</div>
+        <table style="font-size:12px;width:100%;border-collapse:collapse">
+          <tr><td style="color:#888;padding:2px 0">Acres</td><td style="font-weight:700;padding:2px 0">${p.acres||'—'}</td></tr>
+          <tr><td style="color:#888;padding:2px 0">Price</td><td style="font-weight:700;padding:2px 0">${p.price?'$'+Number(p.price).toLocaleString():'—'}</td></tr>
+          <tr><td style="color:#888;padding:2px 0">$/Acre</td><td style="font-weight:700;padding:2px 0">${(p.price&&p.acres)?'$'+Math.round(p.price/p.acres).toLocaleString():'—'}</td></tr>
+          <tr><td style="color:#888;padding:2px 0">DEP</td><td style="font-weight:700;padding:2px 0">${isDEP?'⚠ DEP Risk':'✓ Clean'}</td></tr>
+          <tr><td style="color:#888;padding:2px 0">Scale</td><td style="padding:2px 0">${esc(p.scale||'—')}</td></tr>
+        </table>
+        ${p.link?`<a href="${esc(p.link)}" target="_blank" rel="noopener" style="display:block;margin-top:10px;font-size:12px;font-weight:700;color:#0055EE">↗ View listing</a>`:''}
+      </div>
+    `,{maxWidth:260});
+    mapMarkers.push(m);
+  });
+}
+function mapFitAll() {
+  if (!mapInst) return;
+  const valid = props.filter(p=>p.lat&&p.lng);
+  if (!valid.length) return;
+  const bounds = L.latLngBounds(valid.map(p=>[p.lat,p.lng]));
+  mapInst.fitBounds(bounds, {padding:[40,40]});
+}
+
+// ---- DUE DILIGENCE ----
+function renderDiligence() {
+  const el = document.getElementById('ck-list');
+  if (!props.length) {
+    el.innerHTML = '<div class="card" style="text-align:center;padding:48px;color:var(--gray4)">No properties yet. Add properties to track due diligence.</div>';
+    return;
+  }
+  el.innerHTML = props.map(p => {
+    const pc = checks[p.id] || {};
+    const done = DILIGENCE.filter(d => pc[d.id]).length;
+    const pct = Math.round(done / DILIGENCE.length * 100);
+    return `
+      <div class="ck-prop">
+        <div class="ck-hd" onclick="toggleCK(${p.id})">
+          <div>
+            <h3>${esc(p.address.split(',')[0])}</h3>
+            <div class="ck-hd-meta">${esc(p.town||'')} · ${p.acres||'?'} ac · ${statusBadge(p.status).replace('class="badge ','class="badge ' )}</div>
+          </div>
+          <div class="ck-progress-wrap">
+            <div class="ck-pct">${done}/${DILIGENCE.length} (${pct}%)</div>
+            <div class="ck-bar-outer"><div class="ck-bar-inner" id="ck-bar-${p.id}" style="width:${pct}%"></div></div>
+          </div>
+        </div>
+        <div class="ck-body" id="ck-body-${p.id}">
+          ${DILIGENCE.map(d => `
+            <div class="ck-item">
+              <input class="ck-cb" type="checkbox" id="ck-${p.id}-${d.id}" ${pc[d.id]?'checked':''} onchange="updateCheck(${p.id},${d.id},this.checked)" aria-label="${esc(d.check)}">
+              <div class="ck-text">
+                <h4>${d.id}. ${esc(d.check)}</h4>
+                <p>${esc(d.why)}</p>
+                <div class="ck-notes">
+                  <textarea placeholder="Add notes for this check..." onblur="saveCheckNote(${p.id},${d.id},this.value)">${esc((checks[p.id]||{})[d.id+'_note']||'')}</textarea>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+function toggleCK(pid) {
+  const body = document.getElementById('ck-body-' + pid);
+  body.classList.toggle('open');
+}
+function updateCheck(pid, did, checked) {
+  if (!checks[pid]) checks[pid] = {};
+  checks[pid][did] = checked;
+  saveChecks();
+  const pc = checks[pid] || {};
+  const done = DILIGENCE.filter(d => pc[d.id]).length;
+  const pct = Math.round(done / DILIGENCE.length * 100);
+  const pctEl = document.querySelector(`#ck-body-${pid}`)?.previousElementSibling?.querySelector('.ck-pct');
+  const barEl = document.getElementById('ck-bar-' + pid);
+  if (pctEl) pctEl.textContent = `${done}/${DILIGENCE.length} (${pct}%)`;
+  if (barEl) barEl.style.width = pct + '%';
+}
+function saveCheckNote(pid, did, val) {
+  if (!checks[pid]) checks[pid] = {};
+  checks[pid][did+'_note'] = val.trim();
+  saveChecks();
+}
+
+// ---- CALCULATORS ----
+function num(id) { return parseFloat(document.getElementById(id)?.value)||0; }
+function setCalcResult(valId, val, labelId, label, extraId, extra) {
+  document.getElementById(valId).textContent = val;
+  if (extraId) document.getElementById(extraId).textContent = extra||'';
+}
+
+function calcCapRate() {
+  const rev = num('c1-rev'), exp = num('c1-exp'), val = num('c1-val');
+  const noi = rev - exp;
+  if (val > 0 && rev > 0) {
+    const cr = (noi/val)*100;
+    setCalcResult('c1-result', fmtPct(cr), null, null, 'c1-extra', `NOI: ${fmtCurrency(noi)} | ${noi>0?'Positive NOI ✓':'Negative NOI — check expenses'}`);
+  } else {
+    document.getElementById('c1-result').textContent = '—';
+    document.getElementById('c1-extra').textContent = rev>0&&exp>0 ? `NOI: ${fmtCurrency(rev-exp)} | Enter property value` : 'Enter all three values';
+  }
+}
+function calcPPA() {
+  const price = num('c2-price'), acres = num('c2-acres'), build = num('c2-build');
+  if (price>0 && acres>0) {
+    document.getElementById('c2-result').textContent = fmtCurrency(price/acres);
+    document.getElementById('c2-extra').textContent = build>0 ? `Buildable rate: ${fmtCurrency(price/build)}/buildable ac` : 'Enter buildable acres for effective rate';
+  } else {
+    document.getElementById('c2-result').textContent = '—';
+    document.getElementById('c2-extra').textContent = 'Enter price and acreage';
+  }
+}
+function calcCabins() {
+  const cabins = num('c3-cabins'), adr = num('c3-adr'), occ = num('c3-occ'), exp = num('c3-exp');
+  if (cabins>0 && adr>0 && occ>0) {
+    const occDays = Math.round(365*(occ/100));
+    const gross = cabins*adr*occDays;
+    const noi = gross - exp;
+    document.getElementById('c3-result').textContent = fmtCurrency(noi);
+    document.getElementById('c3-extra').textContent = `Gross: ${fmtCurrency(gross)} | Occ. days/cabin: ${occDays} | RevPAR: ${fmtCurrency(adr*(occ/100))}`;
+  } else {
+    document.getElementById('c3-result').textContent = '—';
+    document.getElementById('c3-extra').textContent = 'Enter cabin count, ADR, and occupancy';
+  }
+}
+function calcROI() {
+  const land = num('c4-land'), build = num('c4-build'), noi = num('c4-noi'), cap = num('c4-cap');
+  if (land>0 && build>0 && noi>0 && cap>0) {
+    const total = land+build;
+    const exit = noi/(cap/100);
+    const profit = exit-total;
+    const roi = (profit/total)*100;
+    document.getElementById('c4-result').textContent = fmtPct(roi);
+    document.getElementById('c4-extra').textContent = `Exit value: ${fmtCurrency(exit,true)} | Profit: ${fmtCurrency(profit,true)} | Total in: ${fmtCurrency(total,true)}`;
+  } else {
+    document.getElementById('c4-result').textContent = '—';
+    document.getElementById('c4-extra').textContent = 'Enter all values to calculate ROI';
+  }
+}
+function calcLoan() {
+  const p = num('c5-amt'), r = num('c5-rate')/100/12, n = parseInt(document.getElementById('c5-term')?.value)||0;
+  if (p>0 && r>0 && n>0) {
+    const pmt = p*(r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
+    const total = pmt*n;
+    const interest = total-p;
+    document.getElementById('c5-result').textContent = fmtCurrency(pmt)+'/mo';
+    document.getElementById('c5-extra').textContent = `Total interest: ${fmtCurrency(interest,true)} | Total cost: ${fmtCurrency(total,true)}`;
+  } else {
+    document.getElementById('c5-result').textContent = '—';
+    document.getElementById('c5-extra').textContent = 'Enter loan amount, rate, and term';
+  }
+}
+function calcInfra() {
+  const well=num('c6-well'),sep=num('c6-sep'),elec=num('c6-elec'),drv=num('c6-drv'),oth=num('c6-other');
+  const total=well+sep+elec+drv+oth;
+  document.getElementById('c6-result').textContent = fmtCurrency(total);
+  document.getElementById('c6-extra').textContent = `Well: ${fmtCurrency(well)} + Septic: ${fmtCurrency(sep)} + Electric: ${fmtCurrency(elec)} + Driveway: ${fmtCurrency(drv)} + Other: ${fmtCurrency(oth)}`;
+}
+
+// ---- GLOSSARY ----
+function renderGlossary() {
+  const q = (document.getElementById('gloss-input')?.value||'').toLowerCase();
+  const filtered = q ? GLOSSARY_DATA.filter(g => g.term.toLowerCase().includes(q)||g.def.toLowerCase().includes(q)) : GLOSSARY_DATA;
+  const grouped = {};
+  filtered.forEach(g => {
+    const l = g.term[0].toUpperCase();
+    if (!grouped[l]) grouped[l] = [];
+    grouped[l].push(g);
+  });
+  const el = document.getElementById('gloss-list');
+  if (!filtered.length) { el.innerHTML='<div class="gloss-empty">No terms found.</div>'; return; }
+  el.innerHTML = Object.keys(grouped).sort().map(l => `
+    <div class="gloss-letter">${l}</div>
+    ${grouped[l].map(g => `
+      <div class="gloss-item">
+        <div class="gloss-term">${esc(g.term)}</div>
+        <div class="gloss-def">${esc(g.def)}</div>
+      </div>
+    `).join('')}
+  `).join('');
+}
+
+// ---- EXPORT EXCEL ----
+function exportExcel() {
+  if (!window.XLSX) { toast('XLSX library not loaded yet. Try again in a moment.','err'); return; }
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1: Land Scouting
+  const hdr = ['Property / Address','Town / County','Acreage','Price ($)','$/Acre','Status','Watershed / DEP','Scale','Listing Link','Notes'];
+  const rows = props.map(p => [
+    p.address, p.town, p.acres, p.price,
+    (p.price&&p.acres) ? Math.round(p.price/p.acres) : '',
+    p.status, p.watershed, p.scale, p.link, p.notes
+  ]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([hdr,...rows]), 'Land Scouting');
+
+  // Sheet 2: Diligence Checklist
+  const dlHdr = ['#','Check','Why it matters',...props.map(p=>p.address.split(',')[0].substring(0,30))];
+  const dlRows = DILIGENCE.map(d => [
+    d.id, d.check, d.why,
+    ...props.map(p => (checks[p.id]||{})[d.id] ? '✓ Done' : '○ Pending')
+  ]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([dlHdr,...dlRows]), 'Diligence Checklist');
+
+  // Sheet 3: KPI Summary
+  const totalAcres = props.reduce((a,p)=>a+(parseFloat(p.acres)||0),0);
+  const totalVal = props.reduce((a,p)=>a+(parseFloat(p.price)||0),0);
+  const kpiRows = [
+    ['KPI','Value'],
+    ['Export Date', new Date().toLocaleDateString()],
+    ['Total Properties', props.length],
+    ['Total Acreage (ac)', totalAcres.toFixed(1)],
+    ['Total Portfolio Value ($)', totalVal],
+    ['DEP Risk Properties', props.filter(p=>p.watershed&&p.watershed.includes('DEP LIKELY')).length],
+    ['Clean Watershed Properties', props.filter(p=>p.watershed&&!p.watershed.includes('DEP LIKELY')).length],
+    ['Top Pick Properties', props.filter(p=>p.status==='Active – top pick').length],
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(kpiRows), 'KPI Summary');
+
+  XLSX.writeFile(wb, `Landscout_${new Date().toISOString().split('T')[0]}.xlsx`);
+  toast('Excel file downloaded!');
+}
+
+// ---- EXPORT PDF ----
+async function exportPDF() {
+  if (!window.jspdf) { toast('PDF library not loaded yet. Try again in a moment.','err'); return; }
+  toast('Generating PDF…');
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const PW = doc.internal.pageSize.getWidth();
+  const PH = doc.internal.pageSize.getHeight();
+  const M = 14;
+  let y = M;
+  const newPage = (need=10) => { if (y + need > PH - M) { doc.addPage(); y = M; } };
+  const text = (s,x,yy,opts) => doc.text(String(s),x,yy,opts);
+
+  // Header bar
+  doc.setFillColor(255,144,232);
+  doc.rect(0,0,PW,22,'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(16); doc.setTextColor(26,26,26);
+  text('🌲 Landscout',M,15);
+  doc.setFontSize(9); doc.setFont('helvetica','normal');
+  text('Land Scouting Intelligence Report',PW/2,15,{align:'center'});
+  text(new Date().toLocaleDateString(),PW-M,15,{align:'right'});
+  y = 32;
+
+  // KPI Summary
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(26,26,26);
+  text('KPI Summary',M,y); y+=7;
+  const totalAcres = props.reduce((a,p)=>a+(parseFloat(p.acres)||0),0);
+  const totalVal = props.reduce((a,p)=>a+(parseFloat(p.price)||0),0);
+  [
+    ['Total Properties', props.length],
+    ['Total Acreage', totalAcres.toFixed(1)+' ac'],
+    ['Total Portfolio Value', '$'+Math.round(totalVal).toLocaleString()],
+    ['DEP Risk Properties', props.filter(p=>p.watershed&&p.watershed.includes('DEP LIKELY')).length],
+    ['Clean Watershed', props.filter(p=>!p.watershed||!p.watershed.includes('DEP LIKELY')).length],
+  ].forEach(([lbl,val],i) => {
+    newPage(10);
+    doc.setFillColor(i%2===0?244:255, i%2===0?244:255, i%2===0?240:255);
+    doc.rect(M,y-4,PW-M*2,7,'F');
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    text(lbl,M+2,y);
+    doc.setFont('helvetica','bold');
+    text(String(val),PW-M-2,y,{align:'right'});
+    y+=8;
+  });
+  y+=4;
+
+  // Properties Table
+  newPage(20);
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(26,26,26);
+  text('Properties',M,y); y+=7;
+  const cols = [52,30,14,22,18,22];
+  const hdrs = ['Address','Town','Acres','Price','$/Ac','Watershed'];
+  doc.setFillColor(26,26,26); doc.rect(M,y-4,PW-M*2,7,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont('helvetica','bold');
+  let x=M; hdrs.forEach((h,i)=>{text(h,x+1,y);x+=cols[i];}); y+=8;
+  doc.setTextColor(26,26,26);
+  props.forEach((p,idx) => {
+    newPage(10);
+    doc.setFillColor(idx%2===0?255:248,idx%2===0?255:248,idx%2===0?255:248);
+    doc.rect(M,y-4,PW-M*2,7,'F');
+    doc.setFont('helvetica','normal'); doc.setFontSize(7);
+    x=M;
+    const cells=[
+      p.address.split(',')[0].substring(0,30),
+      (p.town||'').substring(0,18),
+      String(p.acres||'—'),
+      p.price?'$'+Number(p.price).toLocaleString():'—',
+      (p.price&&p.acres)?'$'+Math.round(p.price/p.acres).toLocaleString():'—',
+      p.watershed?p.watershed.includes('DEP LIKELY')?'DEP Risk':'Clean':'—'
+    ];
+    cells.forEach((c,i)=>{text(c,x+1,y);x+=cols[i];});
+    y+=8;
+  });
+  y+=6;
+
+  // Due Diligence Progress
+  newPage(24);
+  doc.setFont('helvetica','bold'); doc.setFontSize(13);
+  text('Due Diligence Progress',M,y); y+=7;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  props.forEach(p => {
+    newPage(10);
+    const pc=checks[p.id]||{};
+    const done=DILIGENCE.filter(d=>pc[d.id]).length;
+    const pct=Math.round(done/DILIGENCE.length*100);
+    text(`${p.address.split(',')[0].substring(0,42)}: ${done}/${DILIGENCE.length} (${pct}%)`,M,y);
+    doc.setDrawColor(200,200,200); doc.rect(PW-M-56,y-3.5,56,4);
+    doc.setFillColor(255,144,232); doc.rect(PW-M-56,y-3.5,56*pct/100,4,'F');
+    y+=8;
+  });
+  y+=6;
+
+  // Glossary (top 10)
+  newPage(20);
+  doc.setFont('helvetica','bold'); doc.setFontSize(13);
+  text('Key Glossary Terms',M,y); y+=7;
+  GLOSSARY_DATA.slice(0,12).forEach(g => {
+    newPage(16);
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(26,26,26);
+    text(g.term,M,y); y+=5;
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(100,100,96);
+    const lines = doc.splitTextToSize(g.def, PW-M*2);
+    lines.slice(0,2).forEach(l=>{newPage(6);text(l,M,y);y+=5;});
+    doc.setTextColor(26,26,26);
+    y+=2;
+  });
+
+  doc.save(`Landscout_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+  toast('PDF downloaded!');
+}
+
+// ---- EXPORT DILIGENCE PDF ----
+async function exportDiligencePDF() {
+  if (!window.jspdf) { toast('PDF library not loaded yet.','err'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const PW = doc.internal.pageSize.getWidth();
+  const PH = doc.internal.pageSize.getHeight();
+  const M = 14;
+  let y = M;
+  const newPage = (need=10) => { if(y+need>PH-M){doc.addPage();y=M;} };
+
+  doc.setFillColor(255,144,232); doc.rect(0,0,PW,22,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(26,26,26);
+  doc.text('Landscout — Due Diligence Checklist',M,15);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.text(new Date().toLocaleDateString(),PW-M,15,{align:'right'});
+  y=32;
+
+  props.forEach(p => {
+    newPage(40);
+    const pc=checks[p.id]||{};
+    const done=DILIGENCE.filter(d=>pc[d.id]).length;
+    const pct=Math.round(done/DILIGENCE.length*100);
+
+    doc.setFillColor(26,26,26); doc.rect(M,y-5,PW-M*2,10,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(255,255,255);
+    doc.text(p.address.split(',')[0].substring(0,50),M+2,y);
+    doc.setFontSize(8); doc.setTextColor(255,144,232);
+    doc.text(`${done}/${DILIGENCE.length} (${pct}%)`,PW-M-2,y,{align:'right'});
+    doc.setTextColor(26,26,26);
+    y+=10;
+
+    DILIGENCE.forEach(d => {
+      newPage(18);
+      const checked = !!pc[d.id];
+      doc.setFillColor(checked?212:255,checked?240:255,checked?225:255);
+      doc.rect(M,y-4,PW-M*2,14,'F');
+      doc.setFont('helvetica',checked?'bold':'normal'); doc.setFontSize(8); doc.setTextColor(26,26,26);
+      doc.text(checked?'☑':'☐',M+1,y);
+      doc.setFont('helvetica','bold');
+      doc.text(`${d.id}. ${d.check}`,M+6,y);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(100,100,96);
+      const lines = doc.splitTextToSize(d.why,PW-M*2-10);
+      lines.slice(0,2).forEach((l,li) => { doc.text(l,M+6,y+5+li*4.5); });
+      doc.setTextColor(26,26,26);
+      y+=16;
+    });
+    y+=6;
+  });
+
+  doc.save(`Landscout_Diligence_${new Date().toISOString().split('T')[0]}.pdf`);
+  toast('Checklist PDF downloaded!');
+}
+
+// ---- KEYBOARD SHORTCUTS ----
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeModal();
+    hideConfirm();
+    closeMobileNav();
+  }
+});
+// Click outside modal to close
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+document.getElementById('confirm-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('confirm-overlay')) hideConfirm();
+});
+
+// ---- INIT ----
+function init() {
+  loadState();
+  renderDashboard();
+  renderPropertiesTable();
+  renderGlossary();
+  // Run all calculators with defaults to show initial output
+  calcCapRate();
+  calcPPA();
+  calcCabins();
+  calcROI();
+  calcLoan();
+  calcInfra();
+}
+
+init();
+</script>
+</body>
+</html>
